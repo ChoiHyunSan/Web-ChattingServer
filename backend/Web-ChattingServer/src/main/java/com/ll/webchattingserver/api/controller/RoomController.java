@@ -24,6 +24,4 @@ public class RoomController {
                                              Principal principal){
         return Result.success(roomService.create(principal.getName(), request.getRoomName()));
     }
-
-
 }
