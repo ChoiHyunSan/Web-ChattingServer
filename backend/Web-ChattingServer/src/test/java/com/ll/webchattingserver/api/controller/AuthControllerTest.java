@@ -1,13 +1,12 @@
 package com.ll.webchattingserver.api.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ll.webchattingserver.api.dto.request.LoginRequest;
-import com.ll.webchattingserver.api.dto.request.SignupRequest;
+import com.ll.webchattingserver.api.dto.request.auth.LoginRequest;
+import com.ll.webchattingserver.api.dto.request.auth.SignupRequest;
 import com.ll.webchattingserver.global.exception.DuplicateEmailException;
 import com.ll.webchattingserver.global.exception.DuplicateUsernameException;
 import com.ll.webchattingserver.global.exception.PasswordMismatchException;
 import jakarta.transaction.Transactional;
-import org.apache.juli.logging.Log;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

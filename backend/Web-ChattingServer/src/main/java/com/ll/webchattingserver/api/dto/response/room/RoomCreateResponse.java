@@ -1,4 +1,4 @@
-package com.ll.webchattingserver.api.dto.response;
+package com.ll.webchattingserver.api.dto.response.room;
 
 import lombok.*;
 

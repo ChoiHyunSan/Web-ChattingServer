@@ -1,10 +1,10 @@
 package com.ll.webchattingserver.api.controller;
 
 import com.ll.webchattingserver.api.Result;
-import com.ll.webchattingserver.api.dto.request.LoginRequest;
-import com.ll.webchattingserver.api.dto.request.SignupRequest;
-import com.ll.webchattingserver.api.dto.response.SignupResponse;
-import com.ll.webchattingserver.api.dto.response.TokenResponse;
+import com.ll.webchattingserver.api.dto.request.auth.LoginRequest;
+import com.ll.webchattingserver.api.dto.request.auth.SignupRequest;
+import com.ll.webchattingserver.api.dto.response.auth.SignupResponse;
+import com.ll.webchattingserver.api.dto.response.auth.TokenResponse;
 import com.ll.webchattingserver.domain.user.UserService;
 import com.ll.webchattingserver.global.security.JwtProvider;
 import lombok.RequiredArgsConstructor;
