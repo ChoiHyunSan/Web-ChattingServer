@@ -29,4 +29,11 @@ public class GlobalExceptionHandler {
     public Result<Void> handleUsernameNotFoundException(RuntimeException e) {
         return Result.error(400, "로그인 정보가 올바르지 않습니다.");
     }
+
+    @ExceptionHandler({LogicErrorException.class})
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public Result<Void> handleIllegalAccessException(RuntimeException e) {
+        log.warn(e.getMessage());
+        return Result.error(500,"Server Error");
+    }
 }

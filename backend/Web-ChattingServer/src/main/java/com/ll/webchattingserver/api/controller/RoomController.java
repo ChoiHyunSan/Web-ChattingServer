@@ -4,6 +4,7 @@ import com.ll.webchattingserver.api.Result;
 import com.ll.webchattingserver.api.dto.request.room.RoomCreateRequest;
 import com.ll.webchattingserver.api.dto.request.room.RoomListRequest;
 import com.ll.webchattingserver.api.dto.response.room.RoomCreateResponse;
+import com.ll.webchattingserver.api.dto.response.room.RoomJoinResponse;
 import com.ll.webchattingserver.api.dto.response.room.RoomListResponse;
 import com.ll.webchattingserver.domain.room.RoomCond;
 import com.ll.webchattingserver.domain.room.RoomService;
@@ -38,5 +39,11 @@ public class RoomController {
     @GetMapping("/myList")
     public Result<List<RoomListResponse>> getList(Principal principal){
         return Result.success(roomService.getMyList(principal.getName()));
+    }
+
+    @PostMapping("/{roomId}/join")
+    public Result<RoomJoinResponse> join(@PathVariable UUID roomId,
+                                         Principal principal) {
+        return Result.success(roomService.join(principal.getName(), roomId));
     }
 }

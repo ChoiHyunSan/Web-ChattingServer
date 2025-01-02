@@ -48,4 +48,8 @@ public class Room {
     public void leave(User user) {
         this.participants.remove(user);
     }
+
+    public void updateParticipants(Set<User> participants) {
+        this.participants = participants;
+    }
 }

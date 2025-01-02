@@ -42,4 +42,8 @@ public class UserService {
     public User findByUsername(String name) {
         return userRepository.findByUsername(name).orElseThrow(() -> new ResourceNotFoundException(User.class.getPackageName()));
     }
+
+    public User findById(Long id) {
+        return userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException(User.class.getPackageName()));
+    }
 }
