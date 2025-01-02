@@ -1,6 +1,6 @@
 package com.ll.webchattingserver.domain.user;
 
-import com.ll.webchattingserver.api.dto.response.SignupResponse;
+import com.ll.webchattingserver.api.dto.response.auth.SignupResponse;
 import com.ll.webchattingserver.global.exception.DuplicateEmailException;
 import com.ll.webchattingserver.global.exception.DuplicateUsernameException;
 import com.ll.webchattingserver.global.exception.PasswordMismatchException;

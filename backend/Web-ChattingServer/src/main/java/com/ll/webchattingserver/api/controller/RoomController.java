@@ -1,16 +1,17 @@
 package com.ll.webchattingserver.api.controller;
 
 import com.ll.webchattingserver.api.Result;
-import com.ll.webchattingserver.api.dto.request.RoomCreateRequest;
-import com.ll.webchattingserver.api.dto.response.RoomCreateResponse;
+import com.ll.webchattingserver.api.dto.request.room.RoomCreateRequest;
+import com.ll.webchattingserver.api.dto.request.room.RoomListRequest;
+import com.ll.webchattingserver.api.dto.response.room.RoomCreateResponse;
+import com.ll.webchattingserver.api.dto.response.room.RoomListResponse;
+import com.ll.webchattingserver.domain.room.RoomCond;
 import com.ll.webchattingserver.domain.room.RoomService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -23,5 +24,21 @@ public class RoomController {
     public Result<RoomCreateResponse> create(@RequestBody RoomCreateRequest request,
                                              Principal principal){
         return Result.success(roomService.create(principal.getName(), request.getRoomName()));
+    }
+
+    @GetMapping("/list")
+    public Result<List<RoomListResponse>> getAllList(@RequestBody RoomListRequest request){
+
+        RoomCond cond = RoomCond.of(request.getRoomName(), request.getPage(),
+                request.getSize(), request.getSort(), null);
+        return Result.success(roomService.getRoomList(cond));
+    }
+
+    @GetMapping("/myList")
+    public Result<List<RoomListResponse>> getList(@RequestBody RoomListRequest request,
+                                                  Principal principal){
+        RoomCond cond = RoomCond.of(request.getRoomName(), request.getPage(),
+                request.getSize(), request.getSort(), principal.getName());
+        return Result.success(roomService.getRoomList(cond));
     }
 }

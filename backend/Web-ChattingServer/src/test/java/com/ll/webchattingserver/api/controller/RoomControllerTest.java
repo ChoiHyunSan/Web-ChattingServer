@@ -1,19 +1,17 @@
 package com.ll.webchattingserver.api.controller;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ll.webchattingserver.api.Result;
 import com.ll.webchattingserver.api.dto.redis.RoomRedisDto;
-import com.ll.webchattingserver.api.dto.request.LoginRequest;
-import com.ll.webchattingserver.api.dto.request.RoomCreateRequest;
-import com.ll.webchattingserver.api.dto.request.SignupRequest;
-import com.ll.webchattingserver.api.dto.response.*;
+import com.ll.webchattingserver.api.dto.request.auth.LoginRequest;
+import com.ll.webchattingserver.api.dto.request.room.RoomCreateRequest;
+import com.ll.webchattingserver.api.dto.request.auth.SignupRequest;
+import com.ll.webchattingserver.api.dto.response.auth.TokenResponse;
+import com.ll.webchattingserver.api.dto.response.room.RoomCreateResponse;
 import com.ll.webchattingserver.domain.room.Room;
 import com.ll.webchattingserver.domain.room.RoomRepository;
-import com.ll.webchattingserver.domain.room.RoomService;
 import jakarta.transaction.Transactional;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -21,12 +19,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.Set;
 import java.util.UUID;
