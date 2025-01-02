@@ -11,4 +11,13 @@ public class SignupRequest {
     private String email;
     private String password;
     private String passwordCheck;
+
+    public static SignupRequest of(String username, String email, String password, String passwordCheck) {
+        return SignupRequest.builder()
+                .username(username)
+                .email(email)
+                .password(password)
+                .passwordCheck(passwordCheck)
+                .build();
+    }
 }
