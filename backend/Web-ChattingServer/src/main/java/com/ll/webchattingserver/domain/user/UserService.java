@@ -5,6 +5,7 @@ import com.ll.webchattingserver.global.exception.DuplicateEmailException;
 import com.ll.webchattingserver.global.exception.DuplicateUsernameException;
 import com.ll.webchattingserver.global.exception.PasswordMismatchException;
 import com.ll.webchattingserver.global.exception.ResourceNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
+    @Transactional
     public SignupResponse signUp(String username, String email, String password, String passwordCheck) {
         checkInvalidSignupInput(username, email, password, passwordCheck);
 

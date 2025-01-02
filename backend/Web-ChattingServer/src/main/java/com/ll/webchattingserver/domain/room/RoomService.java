@@ -4,6 +4,7 @@ import com.ll.webchattingserver.api.dto.redis.RoomRedisDto;
 import com.ll.webchattingserver.api.dto.response.RoomCreateResponse;
 import com.ll.webchattingserver.domain.user.User;
 import com.ll.webchattingserver.domain.user.UserService;
+import com.ll.webchattingserver.global.cache.RedisService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -15,7 +16,7 @@ public class RoomService {
 
     private final RoomRepository roomRepository;
     private final UserService userService;
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisService redisService;
 
     @Transactional
     public RoomCreateResponse create(String name, String roomName) {
@@ -25,11 +26,8 @@ public class RoomService {
         room.join(user);
         roomRepository.save(room);
 
-        String redisKey = "chat:room:" + room.getId();
-        redisTemplate.opsForValue().set(redisKey, RoomRedisDto.of(room));
-
-        String participantKey = "chat:room" + room.getId() + ":participant";
-        redisTemplate.opsForSet().add(participantKey, String.valueOf(user.getId()));
+        redisService.setRoom(room);
+        redisService.setParticipants(room, user);
 
         return RoomCreateResponse.of(room.getId().toString());
     }
