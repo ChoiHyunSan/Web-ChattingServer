@@ -1,4 +1,4 @@
-package com.ll.webchattingserver.domain;
+package com.ll.webchattingserver.domain.user;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

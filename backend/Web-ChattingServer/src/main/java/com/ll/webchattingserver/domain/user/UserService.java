@@ -1,4 +1,4 @@
-package com.ll.webchattingserver.domain;
+package com.ll.webchattingserver.domain.user;
 
 import com.ll.webchattingserver.api.dto.response.SignupResponse;
 import com.ll.webchattingserver.global.exception.DuplicateEmailException;

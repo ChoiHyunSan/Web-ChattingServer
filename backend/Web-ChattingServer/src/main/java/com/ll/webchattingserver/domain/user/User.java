@@ -1,4 +1,4 @@
-package com.ll.webchattingserver.domain;
+package com.ll.webchattingserver.domain.user;
 
 import jakarta.persistence.*;
 import lombok.*;
