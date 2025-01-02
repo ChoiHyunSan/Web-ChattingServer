@@ -12,6 +12,7 @@ import lombok.*;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(name = "users")
 public class User {
 
     @Id @Column(name = "user_id")
@@ -25,4 +26,12 @@ public class User {
 
     @Column(unique = true)
     private String email;
+
+    public static User of(String username, String password, String email) {
+        return User.builder()
+                .username(username)
+                .password(password)
+                .email(email)
+                .build();
+    }
 }

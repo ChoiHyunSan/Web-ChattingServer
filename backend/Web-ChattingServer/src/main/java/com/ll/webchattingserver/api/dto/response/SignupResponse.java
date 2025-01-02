@@ -8,4 +8,11 @@ import lombok.Data;
 public class SignupResponse {
     private String username;
     private String email;
+
+    public static SignupResponse of(String username, String email) {
+        return SignupResponse.builder()
+                .username(username)
+                .email(email)
+                .build();
+    }
 }
