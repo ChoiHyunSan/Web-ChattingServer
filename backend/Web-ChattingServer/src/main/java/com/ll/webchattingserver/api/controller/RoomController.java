@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -35,10 +36,7 @@ public class RoomController {
     }
 
     @GetMapping("/myList")
-    public Result<List<RoomListResponse>> getList(@RequestBody RoomListRequest request,
-                                                  Principal principal){
-        RoomCond cond = RoomCond.of(request.getRoomName(), request.getPage(),
-                request.getSize(), request.getSort(), principal.getName());
-        return Result.success(roomService.getRoomList(cond));
+    public Result<List<RoomListResponse>> getList(Principal principal){
+        return Result.success(roomService.getMyList(principal.getName()));
     }
 }

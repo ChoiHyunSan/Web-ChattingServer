@@ -111,4 +111,16 @@ class RoomControllerTest {
         assertThat(dto.getParticipantCount()).isEqualTo(1);
         assertThat(dto.getId()).isEqualTo(roomId);
     }
+
+    @Test
+    @DisplayName("회원은 현재 만들어진 모든 방에 대한 정보를 요청할 수 있다.")
+    void t2() throws Exception {
+
+    }
+
+    @Test
+    @DisplayName("회원은 현재 자신이 속한 모든 방에 대한 정보를 요청할 수 있다.")
+    void t3() throws Exception {
+
+    }
 }

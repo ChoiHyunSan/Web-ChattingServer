@@ -1,15 +1,13 @@
 package com.ll.webchattingserver.domain.room;
 
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
 import java.util.Optional;
 
 @Data
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
+@Getter
 public class RoomCond {
     private String roomName;  // Optional 제거
     private int page;

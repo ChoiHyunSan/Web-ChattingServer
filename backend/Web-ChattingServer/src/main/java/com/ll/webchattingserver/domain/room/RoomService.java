@@ -1,5 +1,6 @@
 package com.ll.webchattingserver.domain.room;
 
+import com.ll.webchattingserver.api.dto.redis.RoomRedisDto;
 import com.ll.webchattingserver.api.dto.response.room.RoomCreateResponse;
 import com.ll.webchattingserver.api.dto.response.room.RoomListResponse;
 import com.ll.webchattingserver.domain.user.User;
@@ -32,14 +33,23 @@ public class RoomService {
 
         redisService.setRoom(room);
         redisService.setParticipants(room, user);
+        redisService.mappingUserAndRoom(user, room);
 
         return RoomCreateResponse.of(room.getId().toString());
     }
 
     public List<RoomListResponse> getRoomList(RoomCond cond) {
-        return roomQueryRepository.findByCond(cond)
-                .stream()
-                .map(RoomListResponse::of)
-                .toList();
+        return roomQueryRepository.findByCond(cond);
+    }
+
+    public List<RoomListResponse> getMyList(String name) {
+        User user = userService.findByUsername(name);
+
+        Optional<List<RoomRedisDto>> userRoomsOpt = redisService.getUserRooms(user);
+        if(userRoomsOpt.isPresent()) {
+            return userRoomsOpt.get().stream().map(RoomListResponse::of).toList();
+        }
+
+        return roomQueryRepository.findByUserContain(user);
     }
 }

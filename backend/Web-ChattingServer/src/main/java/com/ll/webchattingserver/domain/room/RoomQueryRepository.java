@@ -2,13 +2,9 @@ package com.ll.webchattingserver.domain.room;
 
 import com.ll.webchattingserver.api.dto.response.room.RoomListResponse;
 import com.ll.webchattingserver.domain.user.User;
-import com.ll.webchattingserver.domain.user.UserRepository;
-import com.ll.webchattingserver.domain.user.UserService;
-import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -34,12 +30,27 @@ public class RoomQueryRepository {
                 ))
                 .from(room)
                 .where(
-                        containUser(cond.getUsername()),
-                        equalRoomName(cond.getRoomName())
+                        containUser(cond.getUsernameOpt()),
+                        equalRoomName(cond.getRoomNameOpt())
                 )
                 .orderBy(getSort(cond.getSort()))
                 .offset((long) (cond.getPage() - 1) * cond.getSize())
                 .limit(cond.getSize())
+                .fetch();
+    }
+
+    // TODO : 나중에 방이 많아질 것을 대비해서 페이징을 하거나, 정렬 및 검색 기능을 추가해볼 수 있다.
+    public List<RoomListResponse> findByUserContain(User user) {
+        return queryFactory
+                .select(Projections.constructor(RoomListResponse.class,
+                        room.id,
+                        room.name,
+                        room.createdAt,
+                        room.participants.size()
+                ))
+                .from(room)
+                .where(containUser(Optional.of(user.getUsername())))
+                .orderBy(getSort("default"))
                 .fetch();
     }
 
@@ -62,4 +73,6 @@ public class RoomQueryRepository {
     private BooleanExpression containUser(Optional<String> username) {
         return username.map(s -> room.participants.any().username.eq(s)).orElse(null);
     }
+
+
 }
