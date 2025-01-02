@@ -1,6 +1,8 @@
 package com.ll.webchattingserver.domain;
 
 import com.ll.webchattingserver.api.dto.response.SignupResponse;
+import com.ll.webchattingserver.global.exception.DuplicateUsernameException;
+import com.ll.webchattingserver.global.exception.PasswordMismatchException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -14,10 +16,10 @@ public class UserService {
 
     public SignupResponse signUp(String username, String email, String password, String passwordCheck) {
         if(userRepository.findByUsername(username).isPresent()) {
-            // TODO : 아이디 중복 예외 반환
+            throw new DuplicateUsernameException();
         };
         if(!password.equals(passwordCheck)) {
-            // TODO : 비밀번호 <-> 비밀번호 확인 값 불일치 예외 반환
+            throw new PasswordMismatchException();
         }
 
         User user = User.builder()
