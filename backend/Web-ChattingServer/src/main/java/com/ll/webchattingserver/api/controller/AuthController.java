@@ -1,10 +1,11 @@
 package com.ll.webchattingserver.api.controller;
 
+import com.ll.webchattingserver.api.Result;
 import com.ll.webchattingserver.api.dto.request.LoginRequest;
 import com.ll.webchattingserver.api.dto.request.SignupRequest;
 import com.ll.webchattingserver.api.dto.response.SignupResponse;
 import com.ll.webchattingserver.api.dto.response.TokenResponse;
-import com.ll.webchattingserver.domain.UserService;
+import com.ll.webchattingserver.domain.user.UserService;
 import com.ll.webchattingserver.global.security.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
