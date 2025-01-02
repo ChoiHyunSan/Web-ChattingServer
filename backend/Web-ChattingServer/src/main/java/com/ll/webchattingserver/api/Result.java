@@ -1,4 +1,4 @@
-package com.ll.webchattingserver.api.controller;
+package com.ll.webchattingserver.api;
 
 import lombok.Builder;
 import lombok.Data;

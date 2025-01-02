@@ -4,6 +4,7 @@ import com.ll.webchattingserver.api.dto.response.SignupResponse;
 import com.ll.webchattingserver.global.exception.DuplicateEmailException;
 import com.ll.webchattingserver.global.exception.DuplicateUsernameException;
 import com.ll.webchattingserver.global.exception.PasswordMismatchException;
+import com.ll.webchattingserver.global.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -34,5 +35,9 @@ public class UserService {
         if(!password.equals(passwordCheck)) {
             throw new PasswordMismatchException();
         }
+    }
+
+    public User findByUsername(String name) {
+        return userRepository.findByUsername(name).orElseThrow(() -> new ResourceNotFoundException(User.class.getPackageName()));
     }
 }
