@@ -3,7 +3,10 @@ package com.ll.webchattingserver.domain.room;
 import com.ll.webchattingserver.api.dto.redis.RoomRedisDto;
 import com.ll.webchattingserver.api.dto.response.room.RoomCreateResponse;
 import com.ll.webchattingserver.api.dto.response.room.RoomJoinResponse;
-import com.ll.webchattingserver.api.dto.response.room.RoomListResponse;
+import com.ll.webchattingserver.api.dto.response.room.RoomLeaveResponse;
+import com.ll.webchattingserver.domain.intermediate.UserRoom;
+import com.ll.webchattingserver.domain.intermediate.UserRoomRepository;
+import com.ll.webchattingserver.domain.intermediate.UserRoomService;
 import com.ll.webchattingserver.domain.user.User;
 import com.ll.webchattingserver.domain.user.UserService;
 import com.ll.webchattingserver.global.cache.RedisService;
@@ -28,54 +31,121 @@ public class RoomService {
 
     private final UserService userService;
     private final RedisService redisService;
+    private final UserRoomService userRoomService;
 
     @Transactional
     public RoomCreateResponse create(String name, String roomName) {
+
         User user = userService.findByUsername(name);
+        Room room = createRoom(roomName);
+        userRoomService.createUserRoom(user, room);
 
-        Room room = Room.of(roomName);
-        room.join(user);
-        roomRepository.save(room);
-
-        redisService.createRoom(room, user);
+        try {
+            redisService.createRoom(room, user);
+        } catch (Exception e) {
+            log.warn("Failed to cache new room: room={}, user={}", room.getId(), user.getId(), e);
+        }
 
         return RoomCreateResponse.of(room.getId().toString());
     }
 
-    public List<RoomListResponse> getRoomList(RoomCond cond) {
+    public List<RoomRedisDto> getRoomList(RoomCond cond) {
         return roomQueryRepository.findByCond(cond);
     }
 
-    public List<RoomListResponse> getMyList(String name) {
+    public List<RoomRedisDto> getMyList(String name) {
         User user = userService.findByUsername(name);
 
-        Optional<List<RoomRedisDto>> userRoomsOpt = redisService.getUserRooms(user);
-        return userRoomsOpt.map(roomRedisDtoList ->
-                        roomRedisDtoList.stream()
-                                .map(RoomListResponse::of)
-                                .toList())
-                .orElseGet(() -> roomQueryRepository.findByUserContain(user));
+        Optional<List<RoomRedisDto>> userRooms = redisService.getUserRooms(user);
+        if(userRooms.isPresent()) {
+            return userRooms.get();
+        }
+
+        log.info("레디스가 비어있네요");
+
+        List<Room> rooms = userRoomService.findRoomsByUserId(user.getId());
+        List<RoomRedisDto> roomDtos = rooms.stream()
+                .map(RoomRedisDto::of)
+                .toList();
+
+        // 캐시 갱신
+        try {
+            redisService.cacheUserRooms(user, roomDtos);
+        } catch (Exception e) {
+            log.warn("Failed to cache user rooms: user={}",
+                    user.getId(), e);
+        }
+
+        return roomDtos;
     }
 
     @Transactional
     public RoomJoinResponse join(String name, UUID roomId) {
         User user = userService.findByUsername(name);
-        Room room = roomRepository.findById(roomId)
-                .orElseThrow(() -> new ResourceNotFoundException("Invalid Room ID: " + roomId));
+        Room room = findRoom(roomId);
 
+        userRoomService.createUserRoom(user, room);
+
+        // Redis 캐시 갱신 시도
         try {
-              if (redisService.getRoom(roomId).isEmpty()) {
+            // 방 정보가 캐시에 있다면 갱신
+            if (redisService.getRoom(roomId).isPresent()) {
                 redisService.setRoom(room);
             }
             redisService.joinRoom(user, roomId);
-        } catch (RedisConnectionException e) {
-            log.warn("Redis connection failed, proceeding with DB only: {}", e.getMessage());
-
-            // 실패 시, DB 작업
-            room.join(user);
-            roomRepository.save(room);
+        } catch (Exception e) {
+            log.warn("Failed to update Redis cache for room join: room={}, user={}", roomId, user.getId());
         }
 
         return RoomJoinResponse.of();
+    }
+
+    @Transactional
+    public RoomLeaveResponse leave(String name, UUID roomId){
+        User user = userService.findByUsername(name);
+        Room room = findRoom(roomId);
+
+        List<UserRoom> userRooms = userRoomService.findByRoom(room);
+        try {
+            // 방이 사라지는 경우 (= 자기 자신 밖에 방에 없는 경우)
+            if (userRooms.size() == 1) {
+                // 채팅방 삭제 + 레디스 방 정보 삭제
+                roomRepository.delete(room);
+                redisService.removeRoom(roomId);
+            } else {
+                // 방이 유지되는 경우 캐시 갱신
+                if (redisService.getRoom(roomId).isPresent()) {
+                    redisService.setRoom(room);
+                }
+            }
+            
+            // UserRoom 데이터 삭제
+            deleteUserRoom(userRooms, user);
+        } catch (Exception e) {
+            log.warn("Failed to update Redis cache for room leave: room={}, user={}",
+                    roomId, user.getId());
+        }
+
+        // 레디스 상에서 유저의 방 목록을 제거
+        redisService.leaveRoom(user, roomId);
+        return RoomLeaveResponse.of();
+    }
+
+    // 헬퍼 메서드들
+    private Room createRoom(String roomName) {
+        Room room = Room.of(roomName);
+        return roomRepository.save(room);
+    }
+
+    private Room findRoom(UUID roomId) {
+        return roomRepository.findById(roomId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Room not found: " + roomId));
+    }
+
+    private void deleteUserRoom(List<UserRoom> userRooms, User user) {
+        userRooms.stream()
+                .filter(userRoom -> userRoom.getUser().getId().equals(user.getId()))
+                .forEach(userRoomService::delete);
     }
 }

@@ -9,11 +9,11 @@ import java.util.Optional;
 @Builder
 @Getter
 public class RoomCond {
-    private String roomName;  // Optional 제거
+    private String roomName;
     private int page;
     private int size;
     private String sort;
-    private String username;  // Optional 제거
+    private String username;
 
     public static RoomCond of(String roomName, Integer page, Integer size, String sort, String username) {
         return RoomCond.builder()

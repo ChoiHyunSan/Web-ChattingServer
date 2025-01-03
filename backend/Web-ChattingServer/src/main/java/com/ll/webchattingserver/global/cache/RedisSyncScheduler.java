@@ -24,36 +24,6 @@ public class RedisSyncScheduler {
 
     @Scheduled(fixedRate = 60000) // 1분마다 실행
     public void syncRedisChangesToDB() {
-        try {
-            Set<String> roomKeys = redisService.getRoomkeys();
-            roomKeys.forEach(roomKey -> {
-                try{
-                    syncRoom(roomKey);
-                }catch (Exception e){
-                    log.error("Failed to sync room {}: {}", roomKey, e.getMessage());
-                }
-            });
 
-            log.info("Completed Redis to DB sync");
-        } catch (Exception e) {
-            log.error("Failed to sync Redis changes to DB: {}", e.getMessage());
-        }
-    }
-
-    private void syncRoom(String key) {
-        RoomRedisDto roomData = redisService.getRoom(key)
-                .orElseThrow(() -> new LogicErrorException("Room not found in Redis: " + key));
-
-        Room room = roomRepository.findById(roomData.getId())
-                .orElseGet(() -> Room.of(roomData.getName()));
-
-        Set<Long> participantIds = redisService.getParticipants(roomData.getId());
-
-        if(!room.isSameParticipants(participantIds)) {
-            room.updateParticipants(participantIds.stream()
-                    .map(userService::findById)
-                    .collect(Collectors.toSet()));
-            roomRepository.save(room);
-        }
     }
 }

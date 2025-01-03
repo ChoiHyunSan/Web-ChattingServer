@@ -10,18 +10,31 @@ import java.util.UUID;
 @Builder
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@EqualsAndHashCode
 public class RoomRedisDto {
-    private UUID id;
+    private String id;
     private String name;
     private LocalDateTime createdAt;
     private int participantCount;
 
+    // QueryDSL용 생성자
+    public RoomRedisDto(UUID id, String name, LocalDateTime createdAt, Integer participantCount) {
+        this.id = id.toString();
+        this.name = name;
+        this.createdAt = createdAt;
+        this.participantCount = participantCount;
+    }
+
     public static RoomRedisDto of(Room room) {
         return RoomRedisDto.builder()
-                .id(room.getId())
+                .id(room.getId().toString())
                 .name(room.getName())
                 .createdAt(room.getCreatedAt())
-                .participantCount(room.getParticipants().size())
+                .participantCount(room.getParticipantCount())
                 .build();
+    }
+
+    public int leaveOneUser() {
+        return --participantCount;
     }
 }

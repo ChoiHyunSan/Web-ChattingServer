@@ -21,7 +21,7 @@ public class RoomListResponse {
 
     public static RoomListResponse of(RoomRedisDto roomRedisDto) {
         return RoomListResponse.builder()
-                .id(roomRedisDto.getId())
+                .id(UUID.fromString(roomRedisDto.getId()))
                 .name(roomRedisDto.getName())
                 .createdAt(roomRedisDto.getCreatedAt())
                 .participantCount(roomRedisDto.getParticipantCount())

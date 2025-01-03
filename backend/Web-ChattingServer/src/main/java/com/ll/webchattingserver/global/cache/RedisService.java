@@ -3,7 +3,10 @@ package com.ll.webchattingserver.global.cache;
 import com.ll.webchattingserver.api.dto.redis.RoomRedisDto;
 import com.ll.webchattingserver.domain.room.Room;
 import com.ll.webchattingserver.domain.user.User;
+import com.ll.webchattingserver.global.exception.LogicErrorException;
+import io.lettuce.core.RedisConnectionException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -12,18 +15,12 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class RedisService {
 
     private final RedisTemplate<String, Object> redisTemplate;
-    private final RedisTemplate<String, Long> redisLongTemplate;
-    /**
-     * Key : RoomId / Value : Set<userId>
-     */
-    private static String generateRoomUserSetKey(UUID roomId) {
-        return "chat:room" + roomId + ":participant";
-    }
 
     /**
      *  Key : RoomId / Value : RoomRedisDto
@@ -39,33 +36,47 @@ public class RedisService {
         return "chat:user:" + user.getId() + ":rooms";
     }
 
+    // 기본 캐싱 작업
     public void setRoom(Room room) {
-        String redisKey = generateRoomInfoKey(room.getId());
-        redisTemplate.opsForValue().set(redisKey, RoomRedisDto.of(room));
+        setRoom(RoomRedisDto.of(room));
     }
 
-    public void setParticipants(UUID roomId, Long userId){
-        String participantKey = generateRoomUserSetKey(roomId);
-        redisTemplate.opsForSet().add(participantKey, userId);
+    public void setRoom(RoomRedisDto room) {
+        try {
+            String redisKey = generateRoomInfoKey(UUID.fromString(room.getId()));
+            redisTemplate.opsForValue().set(redisKey, room);
+            log.info("RedisKey : {}, value : {}", redisKey, room);
+        } catch (Exception e) {
+            log.warn("Failed to cache room: {}", room.getId(), e);
+        }
     }
 
     public void mappingUserAndRoom(User user, UUID roomId) {
-        String roomsKey = generateUserRoomSetKey(user);
-        redisTemplate.opsForSet().add(roomsKey, roomId);
+        try {
+            String roomsKey = generateUserRoomSetKey(user);
+            redisTemplate.opsForSet().add(roomsKey, roomId);
+            log.info("RoomsKey : {}, roomId : {}", roomsKey, roomId);
+        } catch (Exception e) {
+            log.warn("Failed to map user to room in cache: user={}, room={}", user.getId(), roomId, e);
+        }
     }
 
     public Optional<List<RoomRedisDto>> getUserRooms(User user) {
+
         String key = generateUserRoomSetKey(user);
         Set<Object> roomIds = redisTemplate.opsForSet().members(key);
 
+        log.info("RoomIds: {}", roomIds);
         if (roomIds == null || roomIds.isEmpty()) {
-            return Optional.of(Collections.emptyList());
+            return Optional.empty();
         }
 
-        return Optional.of(roomIds.stream()
-                .map(id -> getRoom((UUID)id).orElse(null))
+        List<RoomRedisDto> list = roomIds.stream()
+                .map(id -> getRoom(id.toString()).orElse(null))
                 .filter(Objects::nonNull)
-                .toList());
+                .toList();
+
+        return list.isEmpty() ? Optional.empty() : Optional.of(list);
     }
 
     public Optional<RoomRedisDto> getRoom(UUID id) {
@@ -76,44 +87,72 @@ public class RedisService {
         return Optional.ofNullable((RoomRedisDto)redisTemplate.opsForValue().get(roomInfoKey));
     }
 
-    public void joinRoom(User user, UUID roomId) {
-        redisTemplate.execute(new SessionCallback<Void>() {
-            @Override
-            public Void execute(RedisOperations operations) throws DataAccessException {
-                operations.multi();
-
-                // 참여 정보 저장
-                setParticipants(roomId, user.getId());
-                mappingUserAndRoom(user, roomId);
-
-                operations.exec();
-                return null;
-            }
-        });
-    }
-
-    public void createRoom(Room room, User user) {
-        redisTemplate.execute(new SessionCallback<Void>() {
-            @Override
-            public Void execute(RedisOperations operations) throws DataAccessException {
-                operations.multi();
-
-                setRoom(room);
-                setParticipants(room.getId(), user.getId());
-                mappingUserAndRoom(user, room.getId());
-
-                operations.exec();
-                return null;
-            }
-        });
-    }
-
-    public Set<String> getRoomkeys() {
+    public Set<String> getRoomKeys() {
         return  redisTemplate.keys("chat:room:*");
     }
 
-    public Set<Long> getParticipants(UUID roomId) {
-        String key = generateRoomUserSetKey(roomId);
-        return redisLongTemplate.opsForSet().members(key);
+    // 방 참가 관련 캐싱
+    public void joinRoom(User user, UUID roomId) {
+        try {
+            mappingUserAndRoom(user, roomId);
+            log.debug("User {} joined room {} in cache", user.getId(), roomId);
+        } catch (Exception e) {
+            log.warn("Failed to cache room join: user={}, room={}", user.getId(), roomId, e);
+        }
+    }
+
+    public void createRoom(Room room, User user) {
+        try {
+            setRoom(room);
+            mappingUserAndRoom(user, room.getId());
+            log.debug("Room created in cache: {}", room.getId());
+        } catch (Exception e) {
+            log.warn("Failed to cache new room: {}", room.getId(), e);
+        }
+    }
+
+    // 방 나가기 관련 캐싱
+    public void leaveRoom(User user, UUID roomId) {
+        try {
+            String userRoomSetKey = generateUserRoomSetKey(user);
+            redisTemplate.opsForSet().remove(userRoomSetKey, roomId);
+            log.debug("User {} left room {} in cache", user.getId(), roomId);
+        } catch (Exception e) {
+            log.warn("Failed to cache room leave: user={}, room={}", user.getId(), roomId, e);
+        }
+    }
+
+    // 방 삭제 관련 캐싱
+    public void removeRoom(UUID roomId) {
+        try {
+            String roomInfoKey = generateRoomInfoKey(roomId);
+            redisTemplate.delete(roomInfoKey);
+            log.debug("Room {} removed from cache", roomId);
+        } catch (Exception e) {
+            log.warn("Failed to remove room from cache: {}", roomId, e);
+        }
+    }
+
+    public void cacheUserRooms(User user, List<RoomRedisDto> rooms) {
+        rooms.forEach(room -> {
+            setRoom(room);
+            mappingUserAndRoom(user,UUID.fromString(room.getId()));
+        });
+    }
+
+    // 방 정보와 사용자 정보를 함께 캐싱
+    public void cacheRoomWithUser(Room room, User user) {
+        setRoom(room);
+        mappingUserAndRoom(user, room.getId());
+    }
+
+    // 방 나가기 시 캐시 업데이트
+    public void updateRoomCache(Room room, User user) {
+        if (getRoom(room.getId()).isPresent()) {
+            setRoom(room);
+        }
+        leaveRoom(user, room.getId());
     }
 }
+
+

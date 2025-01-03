@@ -1,6 +1,7 @@
 package com.ll.webchattingserver.api.controller;
 
 import com.ll.webchattingserver.api.Result;
+import com.ll.webchattingserver.api.dto.redis.RoomRedisDto;
 import com.ll.webchattingserver.api.dto.request.room.RoomCreateRequest;
 import com.ll.webchattingserver.api.dto.request.room.RoomListRequest;
 import com.ll.webchattingserver.api.dto.response.room.RoomCreateResponse;
@@ -29,7 +30,18 @@ public class RoomController {
     }
 
     @GetMapping("/list")
-    public Result<List<RoomListResponse>> getAllList(@RequestBody RoomListRequest request){
+    public Result<List<RoomRedisDto>> getAllList(
+            @RequestParam(value = "roomName", required = false) String roomName,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "sort", defaultValue = "createdAt,desc") String sort) {
+
+        RoomListRequest request = RoomListRequest.builder()
+                .roomName(roomName)
+                .page(page)
+                .size(size)
+                .sort(sort)
+                .build();
 
         RoomCond cond = RoomCond.of(request.getRoomName(), request.getPage(),
                 request.getSize(), request.getSort(), null);
@@ -37,7 +49,7 @@ public class RoomController {
     }
 
     @GetMapping("/myList")
-    public Result<List<RoomListResponse>> getList(Principal principal){
+    public Result<List<RoomRedisDto>> getList(Principal principal){
         return Result.success(roomService.getMyList(principal.getName()));
     }
 
