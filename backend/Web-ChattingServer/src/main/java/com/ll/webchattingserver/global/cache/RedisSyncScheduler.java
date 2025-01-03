@@ -44,15 +44,16 @@ public class RedisSyncScheduler {
         RoomRedisDto roomData = redisService.getRoom(key)
                 .orElseThrow(() -> new LogicErrorException("Room not found in Redis: " + key));
 
-        Set<Long> participantIds = redisService.getParticipants(roomData.getId());
-
         Room room = roomRepository.findById(roomData.getId())
                 .orElseGet(() -> Room.of(roomData.getName()));
 
-        room.updateParticipants(participantIds.stream()
-                .map(userService::findById)
-                .collect(Collectors.toSet()));
+        Set<Long> participantIds = redisService.getParticipants(roomData.getId());
 
-        roomRepository.save(room);
+        if(!room.isSameParticipants(participantIds)) {
+            room.updateParticipants(participantIds.stream()
+                    .map(userService::findById)
+                    .collect(Collectors.toSet()));
+            roomRepository.save(room);
+        }
     }
 }
