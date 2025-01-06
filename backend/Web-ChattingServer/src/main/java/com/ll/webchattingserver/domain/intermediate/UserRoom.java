@@ -5,9 +5,11 @@ import com.ll.webchattingserver.domain.user.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
+@EntityListeners(AuditingEntityListener.class)
 @Entity
 @Getter
 @Builder
@@ -27,6 +29,7 @@ public class UserRoom {
     @JoinColumn(name = "room_id")
     Room room;
 
+    @Column(updatable = false)
     @CreatedDate
     private LocalDateTime joinedAt;
 

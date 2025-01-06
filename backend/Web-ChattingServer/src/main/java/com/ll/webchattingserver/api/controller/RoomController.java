@@ -6,9 +6,12 @@ import com.ll.webchattingserver.api.dto.request.room.RoomCreateRequest;
 import com.ll.webchattingserver.api.dto.request.room.RoomListRequest;
 import com.ll.webchattingserver.api.dto.response.room.RoomCreateResponse;
 import com.ll.webchattingserver.api.dto.response.room.RoomJoinResponse;
-import com.ll.webchattingserver.api.dto.response.room.RoomListResponse;
+import com.ll.webchattingserver.api.dto.response.room.RoomLeaveResponse;
 import com.ll.webchattingserver.domain.room.RoomCond;
 import com.ll.webchattingserver.domain.room.RoomService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,6 +19,7 @@ import java.security.Principal;
 import java.util.List;
 import java.util.UUID;
 
+@Tag(name = "Room API", description = "Room API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/room")
@@ -23,12 +27,21 @@ public class RoomController {
 
     private final RoomService roomService;
 
+    @Operation(
+            summary = "새로운 방을 생성합니다.",
+            description = "새로운 방 생성"
+    )
     @PostMapping
-    public Result<RoomCreateResponse> create(@RequestBody RoomCreateRequest request,
-                                             Principal principal){
+    public Result<RoomCreateResponse> create(
+            @RequestBody @Valid RoomCreateRequest request,
+                                 Principal principal){
         return Result.success(roomService.create(principal.getName(), request.getRoomName()));
     }
 
+    @Operation(
+            summary = "전체 방 목록을 탐색합니다.",
+            description = "전체 방 목록을 탐색"
+    )
     @GetMapping("/list")
     public Result<List<RoomRedisDto>> getAllList(
             @RequestParam(value = "roomName", required = false) String roomName,
@@ -48,14 +61,38 @@ public class RoomController {
         return Result.success(roomService.getRoomList(cond));
     }
 
+    @Operation(
+            summary = "자신이 속한 방 목록을 탐색합니다.",
+            description = "자신이 속한 방을 탐색"
+    )
     @GetMapping("/myList")
-    public Result<List<RoomRedisDto>> getList(Principal principal){
+    public Result<List<RoomRedisDto>> getList(
+            Principal principal
+    ){
         return Result.success(roomService.getMyList(principal.getName()));
     }
 
+    @Operation(
+            summary = "방에 참여합니다.",
+            description = "방에 참여하고 구독 정보를 반환합니다."
+    )
     @PostMapping("/{roomId}/join")
-    public Result<RoomJoinResponse> join(@PathVariable UUID roomId,
-                                         Principal principal) {
+    public Result<RoomJoinResponse> join(
+            @PathVariable("roomId") UUID roomId,
+            Principal principal
+    ) {
         return Result.success(roomService.join(principal.getName(), roomId));
+    }
+
+    @Operation(
+            summary = "방에서 나갑니다.",
+            description = "참여중인 방에서 나갑니다."
+    )
+    @PostMapping("/{roomId}/leave")
+    public Result<RoomLeaveResponse> leave(
+            @PathVariable("roomId") UUID roomId,
+            Principal principal
+    ){
+        return Result.success(roomService.leave(principal.getName(), roomId));
     }
 }

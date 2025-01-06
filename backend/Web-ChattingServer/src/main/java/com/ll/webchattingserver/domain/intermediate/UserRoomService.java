@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -31,5 +32,9 @@ public class UserRoomService {
 
     public List<Room> findRoomsByUserId(Long id) {
         return userRoomQueryRepository.findRoomsByUserId(id);
+    }
+
+    public List<UserRoom> findByUserAndRoom(User user, Room room) {
+       return userRoomQueryRepository.findByUserAndRoom(user, room);
     }
 }

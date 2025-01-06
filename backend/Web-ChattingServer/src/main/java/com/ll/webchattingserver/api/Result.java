@@ -1,14 +1,22 @@
 package com.ll.webchattingserver.api;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
 @Data
 @Builder
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Schema(description = "결과 반환용 객체")
 public class Result<T> {
+    
+    @Schema(description = "상태 코드")
     private int statusCode;
+    
+    @Schema(description = "클라 전달용 메시지")
     private String message;
+    
+    @Schema(description = "반환 데이터")
     private T data;
 
     public static <T> Result<T> success(final T data) {

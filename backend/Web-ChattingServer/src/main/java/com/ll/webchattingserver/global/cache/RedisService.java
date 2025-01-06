@@ -28,6 +28,10 @@ public class RedisService {
     private static String generateRoomInfoKey(UUID roomId) {
         return "chat:room:" + roomId;
     }
+    private static String generateRoomInfoKey(String roomId) {
+        return "chat:room:" + roomId;
+    }
+
 
     /**
      *  Key : User / Value : Set<roomID>
@@ -72,7 +76,7 @@ public class RedisService {
         }
 
         List<RoomRedisDto> list = roomIds.stream()
-                .map(id -> getRoom(id.toString()).orElse(null))
+                .map(id -> getRoom(generateRoomInfoKey(id.toString())).orElse(null))
                 .filter(Objects::nonNull)
                 .toList();
 
@@ -84,6 +88,7 @@ public class RedisService {
     }
 
     public Optional<RoomRedisDto> getRoom(String roomInfoKey){
+        log.info("RoomInfo key: {}", roomInfoKey);
         return Optional.ofNullable((RoomRedisDto)redisTemplate.opsForValue().get(roomInfoKey));
     }
 

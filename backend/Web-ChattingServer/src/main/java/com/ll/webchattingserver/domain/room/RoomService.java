@@ -12,10 +12,10 @@ import com.ll.webchattingserver.domain.user.UserService;
 import com.ll.webchattingserver.global.cache.RedisService;
 import com.ll.webchattingserver.global.exception.ResourceNotFoundException;
 import io.lettuce.core.RedisConnectionException;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -33,7 +33,7 @@ public class RoomService {
     private final RedisService redisService;
     private final UserRoomService userRoomService;
 
-    @Transactional
+    @Transactional()
     public RoomCreateResponse create(String name, String roomName) {
 
         User user = userService.findByUsername(name);
@@ -72,8 +72,7 @@ public class RoomService {
         try {
             redisService.cacheUserRooms(user, roomDtos);
         } catch (Exception e) {
-            log.warn("Failed to cache user rooms: user={}",
-                    user.getId(), e);
+            log.warn("Failed to cache user rooms: user={}", user.getId(), e);
         }
 
         return roomDtos;
@@ -84,7 +83,9 @@ public class RoomService {
         User user = userService.findByUsername(name);
         Room room = findRoom(roomId);
 
-        userRoomService.createUserRoom(user, room);
+        if(userRoomService.findByUserAndRoom(user, room).isEmpty()){
+            userRoomService.createUserRoom(user, room);
+        }
 
         // Redis 캐시 갱신 시도
         try {
@@ -97,7 +98,7 @@ public class RoomService {
             log.warn("Failed to update Redis cache for room join: room={}, user={}", roomId, user.getId());
         }
 
-        return RoomJoinResponse.of();
+        return RoomJoinResponse.of(roomId.toString());
     }
 
     @Transactional
@@ -122,8 +123,7 @@ public class RoomService {
             // UserRoom 데이터 삭제
             deleteUserRoom(userRooms, user);
         } catch (Exception e) {
-            log.warn("Failed to update Redis cache for room leave: room={}, user={}",
-                    roomId, user.getId());
+            log.warn("Failed to update Redis cache for room leave: room={}, user={}", roomId, user.getId());
         }
 
         // 레디스 상에서 유저의 방 목록을 제거
