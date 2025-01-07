@@ -8,6 +8,8 @@ import com.ll.webchattingserver.global.exception.DuplicateUsernameException;
 import com.ll.webchattingserver.global.exception.PasswordMismatchException;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -16,8 +18,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 
@@ -25,87 +25,113 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 @AutoConfigureMockMvc
 @Transactional
 class AuthControllerTest {
-
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
 
-    @Test
-    @DisplayName("회원 가입 - 성공")
-    void t1() throws Exception {
-        signUp();
+    private static final String USERNAME = "홍길동";
+    private static final String EMAIL = "Test@Test.com";
+    private static final String PASSWORD = "12345";
+    private static final String SIGNUP_URL = "/api/auth/signup";
+    private static final String LOGIN_URL = "/api/auth/login";
+
+    private SignupRequest createSignupRequest(String username, String email, String password, String passwordConfirm) {
+        return SignupRequest.of(username, email, password, passwordConfirm);
     }
 
-    private void signUp() throws Exception {
-        SignupRequest signupRequest = SignupRequest.of("홍길동", "Test@Test.com", "12345", "12345");
-        String content = objectMapper.writeValueAsString(signupRequest);
+    private SignupRequest createValidSignupRequest() {
+        return createSignupRequest(USERNAME, EMAIL, PASSWORD, PASSWORD);
+    }
 
-        mockMvc.perform(post("/api/auth/signup")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(content))
+    private void performSignup(SignupRequest request) throws Exception {
+        mockMvc.perform(post(SIGNUP_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.username").value("홍길동"))
-                .andExpect(jsonPath("$.data.email").value("Test@Test.com"));
+                .andExpect(jsonPath("$.data.username").value(request.getUsername()))
+                .andExpect(jsonPath("$.data.email").value(request.getEmail()));
     }
 
-    @Test
-    @DisplayName("회원 가입 - 중복된 닉네임이나 이메일은 회원가입이 불가능하다.")
-    void t2() throws Exception {
-        SignupRequest signupRequest1 = SignupRequest.of("홍길동", "Test@Test.com", "12345", "12345");
-        SignupRequest signupRequest2 = SignupRequest.of("임꺽정", "Test@Test.com", "12345", "12345");
-        SignupRequest signupRequest3 = SignupRequest.of("홍길동", "abcd@abcd.com", "12345", "12345");
+    @Nested
+    @DisplayName("회원가입")
+    class SignUp {
+        @Test
+        @DisplayName("성공")
+        void success() throws Exception {
+            SignupRequest request = createValidSignupRequest();
+            performSignup(request);
+        }
 
-        mockMvc.perform(post("/api/auth/signup")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(signupRequest1)))
-                .andExpect(status().isOk());
+        @Test
+        @DisplayName("실패 - 중복된 이메일")
+        void failDuplicateEmail() throws Exception {
+            // 첫 번째 회원가입
+            performSignup(createValidSignupRequest());
 
-        mockMvc.perform(post("/api/auth/signup")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(signupRequest2)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(DuplicateEmailException.MSG));
+            // 중복된 이메일로 회원가입 시도
+            SignupRequest duplicateEmail = createSignupRequest("임꺽정", EMAIL, PASSWORD, PASSWORD);
+            mockMvc.perform(post(SIGNUP_URL)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(duplicateEmail)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.message").value(DuplicateEmailException.MSG));
+        }
 
-        mockMvc.perform(post("/api/auth/signup")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(signupRequest3)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(DuplicateUsernameException.MSG));
+        @Test
+        @DisplayName("실패 - 중복된 닉네임")
+        void failDuplicateUsername() throws Exception {
+            // 첫 번째 회원가입
+            performSignup(createValidSignupRequest());
+
+            // 중복된 닉네임으로 회원가입 시도
+            SignupRequest duplicateUsername = createSignupRequest(USERNAME, "other@test.com", PASSWORD, PASSWORD);
+            mockMvc.perform(post(SIGNUP_URL)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(duplicateUsername)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.message").value(DuplicateUsernameException.MSG));
+        }
+
+        @Test
+        @DisplayName("실패 - 비밀번호 불일치")
+        void failPasswordMismatch() throws Exception {
+            SignupRequest request = createSignupRequest(USERNAME, EMAIL, PASSWORD, PASSWORD + "wrong");
+            mockMvc.perform(post(SIGNUP_URL)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.message").value(PasswordMismatchException.MSG));
+        }
     }
 
-    @Test
-    @DisplayName("비밀번호 값과 비밀번호 확인 값이 일치하지 않으면 회원가입에 실패한다.")
-    void t3() throws Exception {
-        SignupRequest signupRequest1 = SignupRequest.of("홍길동", "Test@Test.com", "12345", "123456");
-        mockMvc.perform(post("/api/auth/signup")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(signupRequest1)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(PasswordMismatchException.MSG));
-    }
+    @Nested
+    @DisplayName("로그인")
+    class Login {
+        @BeforeEach
+        void setUp() throws Exception {
+            performSignup(createValidSignupRequest());
+        }
 
-    @Test
-    @DisplayName("로그인 성공")
-    void t4() throws Exception {
-        signUp();
+        @Test
+        @DisplayName("성공")
+        void success() throws Exception {
+            LoginRequest loginRequest = LoginRequest.of(USERNAME, PASSWORD);
+            mockMvc.perform(post(LOGIN_URL)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(loginRequest)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.token").isNotEmpty());
+        }
 
-        LoginRequest loginRequest = LoginRequest.of("홍길동", "12345");
-        mockMvc.perform(post("/api/auth/login")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(loginRequest)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.token").isNotEmpty());
-    }
-
-    @Test
-    @DisplayName("유효하지 않은 로그인 정보로 시도 시엔 실패한다.")
-    void t5() throws Exception {
-        signUp();
-        LoginRequest loginRequest = LoginRequest.of("임꺽정", "12345");
-        mockMvc.perform(post("/api/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(loginRequest)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("로그인 정보가 올바르지 않습니다."));
+        @Test
+        @DisplayName("실패 - 유효하지 않은 로그인 정보")
+        void failInvalidCredentials() throws Exception {
+            LoginRequest loginRequest = LoginRequest.of("임꺽정", PASSWORD);
+            mockMvc.perform(post(LOGIN_URL)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(loginRequest)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.message").value("로그인 정보가 올바르지 않습니다."));
+        }
     }
 }

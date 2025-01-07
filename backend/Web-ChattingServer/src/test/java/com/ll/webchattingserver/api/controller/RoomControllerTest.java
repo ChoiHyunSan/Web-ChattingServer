@@ -1,31 +1,23 @@
 package com.ll.webchattingserver.api.controller;
-
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ll.webchattingserver.api.Result;
 import com.ll.webchattingserver.api.dto.redis.RoomRedisDto;
-import com.ll.webchattingserver.api.dto.request.auth.LoginRequest;
-import com.ll.webchattingserver.api.dto.request.room.RoomCreateRequest;
-import com.ll.webchattingserver.api.dto.request.auth.SignupRequest;
-import com.ll.webchattingserver.api.dto.response.auth.TokenResponse;
-import com.ll.webchattingserver.api.dto.response.room.RoomCreateResponse;
 import com.ll.webchattingserver.domain.room.Room;
 import com.ll.webchattingserver.domain.room.RoomRepository;
 import com.ll.webchattingserver.domain.user.User;
-import com.ll.webchattingserver.domain.user.UserRepository;
 import com.ll.webchattingserver.domain.user.UserService;
+import com.ll.webchattingserver.room.RoomTestHelper;
+
 import jakarta.transaction.Transactional;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.ArrayList;
@@ -35,7 +27,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -43,288 +35,153 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Transactional
 class RoomControllerTest {
-
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
+    @Autowired private RoomTestHelper roomTestHelper;
     @Autowired private RoomRepository roomRepository;
     @Autowired private RedisTemplate<String, Object> redisTemplate;
+    @Autowired private UserService userService;
 
-    private String token;
-
-    private void signUpAndLogin() throws Exception {
-        SignupRequest signupRequest = SignupRequest.of("홍길동", "Test@Test.com", "12345", "12345");
-        String content = objectMapper.writeValueAsString(signupRequest);
-
-        mockMvc.perform(post("/api/auth/signup")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(content));
-
-        LoginRequest loginRequest = LoginRequest.of("홍길동", "12345");
-        String responseBody = mockMvc.perform(post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(loginRequest)))
-                .andReturn().getResponse().getContentAsString();
-
-        JavaType type = objectMapper.getTypeFactory().constructParametricType(
-                Result.class,
-                TokenResponse.class
-        );
-
-        Result<TokenResponse> result = objectMapper.readValue(responseBody, type);
-        token = result.getData().getToken();
-        assertThat(token).isNotNull();
-    }
+    private String userToken;
+    private static final String USERNAME = "홍길동";
+    private static final String EMAIL = "test@test.com";
+    private static final String PASSWORD = "12345";
 
     @BeforeEach
     void setUp() throws Exception {
-        tearDown();
-        signUpAndLogin();
+        roomTestHelper.clearRedisData();
+        userToken = roomTestHelper.getAuthToken(USERNAME, EMAIL, PASSWORD);
     }
 
-    @AfterEach
-    void tearDown() {
-        // Redis의 모든 키 삭제
-        Set<String> keys = redisTemplate.keys("chat:*");
-        if (keys != null && !keys.isEmpty()) {
-            redisTemplate.delete(keys);
+    @Nested
+    @DisplayName("방 생성")
+    class CreateRoom {
+        @Test
+        @DisplayName("방이 정상적으로 생성되고 저장된다")
+        void success() throws Exception {
+            // Given
+            String roomName = "New Room";
+
+            // When
+            UUID roomId = roomTestHelper.createRoom(userToken, roomName);
+
+            // Then
+            // DB 검증
+            Room room = roomRepository.findById(roomId).get();
+            assertThat(room.getName()).isEqualTo(roomName);
+            assertThat(room.getParticipantCount()).isEqualTo(1);
+
+            // Redis 검증
+            verifyRoomCacheWithParticipants(List.of(roomId), 1);
         }
     }
 
-    @Test
-    @DisplayName("방이 정상적으로 생성되고, DB와 Redis에 정상적으로 저장된다.")
-    void t1() throws Exception {
-        RoomCreateRequest request = RoomCreateRequest.of("New Room");
-        String responseBody = mockMvc.perform(post("/api/room")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request))
-                .header("Authorization", "Bearer " + token))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
+    @Nested
+    @DisplayName("방 목록 조회")
+    class ListRooms {
+        @Test
+        @DisplayName("전체 방 목록을 조회할 수 있다")
+        void listAllRooms() throws Exception {
+            // Given
+            List<UUID> roomIds = new ArrayList<>();
+            for (int i = 1; i <= 2; i++) {
+                roomIds.add(roomTestHelper.createRoom(userToken, "Room " + i));
+            }
 
-        JavaType type = objectMapper.getTypeFactory().constructParametricType(
-                Result.class,
-                RoomCreateResponse.class
-        );
-        Result<RoomCreateResponse> result = objectMapper.readValue(responseBody, type);
-        UUID roomId = UUID.fromString(result.getData().getId());
+            String token2 = roomTestHelper.getAuthToken("김철수", "kim@test.com", PASSWORD);
+            roomIds.add(roomTestHelper.createRoom(token2, "Room 3"));
 
-        Room room = roomRepository.findById(roomId).get();
-        assertThat(room.getName()).isEqualTo("New Room");
-        assertThat(room.getParticipantCount()).isEqualTo(1);
+            redisTemplate.delete("chat:rooms");
 
-        String redisKey = "chat:room:" + room.getId();
-        RoomRedisDto dto = (RoomRedisDto) redisTemplate.opsForValue().get(redisKey);
-        assertThat(dto).isNotNull();
-        assertThat(dto.getName()).isEqualTo("New Room");
-        assertThat(dto.getParticipantCount()).isEqualTo(1);
-        assertThat(dto.getId()).isEqualTo(roomId.toString());
-    }
-
-    @Test
-    @DisplayName("회원은 현재 만들어진 모든 방에 대한 정보를 요청할 수 있다.")
-    void t2() throws Exception {
-        // 첫 번째 사용자(홍길동)가 방 2개 생성
-        List<UUID> roomIds = new ArrayList<>();
-        for (int i = 1; i <= 2; i++) {
-            RoomCreateRequest request = RoomCreateRequest.of("Room " + i);
-            String responseBody = mockMvc.perform(post("/api/room")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request))
-                            .header("Authorization", "Bearer " + token))
+            // When
+            String responseBody = mockMvc.perform(get("/api/room/list")
+                            .param("roomName", "Room")
+                            .param("page", "0")
+                            .param("size", "10")
+                            .param("sort", "createdAt,desc")
+                            .header("Authorization", "Bearer " + userToken))
+                    .andDo(print())
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
 
-            JavaType type = objectMapper.getTypeFactory().constructParametricType(
-                    Result.class,
-                    RoomCreateResponse.class
-            );
-            Result<RoomCreateResponse> result = objectMapper.readValue(responseBody, type);
-            roomIds.add(UUID.fromString(result.getData().getId()));
+            // Then
+            List<RoomRedisDto> rooms = extractRoomList(responseBody);
+            assertThat(rooms).hasSize(3);
+            assertThat(rooms).extracting("name")
+                    .containsExactlyInAnyOrder("Room 1", "Room 2", "Room 3");
+
+            verifyRoomCache(roomIds);
         }
 
-        // 두 번째 사용자 생성 및 로그인
-        SignupRequest signupRequest = SignupRequest.of("김철수", "kim@test.com", "12345", "12345");
-        mockMvc.perform(post("/api/auth/signup")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(signupRequest)));
+        @Test
+        @DisplayName("내 방 목록을 조회할 수 있다")
+        void listMyRooms() throws Exception {
+            // Given
+            List<UUID> roomIds = new ArrayList<>();
+            for (int i = 1; i <= 3; i++) {
+                roomIds.add(roomTestHelper.createRoom(userToken, "My Room " + i));
+            }
 
-        LoginRequest loginRequest = LoginRequest.of("김철수", "12345");
-        String responseBody = mockMvc.perform(post("/api/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(loginRequest)))
-                .andReturn().getResponse().getContentAsString();
+            redisTemplate.delete("chat:user:홍길동:rooms");    // 레디스 정보 삭제
 
-        JavaType tokenType = objectMapper.getTypeFactory().constructParametricType(
-                Result.class,
-                TokenResponse.class
-        );
-        Result<TokenResponse> tokenResult = objectMapper.readValue(responseBody, tokenType);
-        String token2 = tokenResult.getData().getToken();
+            // When
+            String responseBody = mockMvc.perform(get("/api/room/myList")
+                            .header("Authorization", "Bearer " + userToken))
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andReturn().getResponse().getContentAsString();
 
-        // 두 번째 사용자가 방 1개 생성
-        RoomCreateRequest request = RoomCreateRequest.of("Room 3");
-        responseBody = mockMvc.perform(post("/api/room")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request))
-                        .header("Authorization", "Bearer " + token2))
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
+            // Then
+            List<RoomRedisDto> myRooms = extractRoomList(responseBody);
+            assertThat(myRooms).hasSize(3);
+            assertThat(myRooms).extracting("name")
+                    .containsExactlyInAnyOrder("My Room 1", "My Room 2", "My Room 3");
 
-        JavaType type = objectMapper.getTypeFactory().constructParametricType(
-                Result.class,
-                RoomCreateResponse.class
-        );
-        Result<RoomCreateResponse> result = objectMapper.readValue(responseBody, type);
-        roomIds.add(UUID.fromString(result.getData().getId()));
+            verifyUserRoomCache(USERNAME, roomIds);
+        }
+    }
 
-        // Redis에서 전체 방 목록 캐시를 제거하여 캐시 미스 상황 만들기
-        redisTemplate.delete("chat:rooms");
-
-        // 첫 번째 사용자로 전체 방 목록 조회
-        responseBody = mockMvc.perform(get("/api/room/list")
-                        .param("roomName", "Room")
-                        .param("page", "0")
-                        .param("size", "10")
-                        .param("sort", "createdAt,desc")
-                        .header("Authorization", "Bearer " + token))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
-
+    private List<RoomRedisDto> extractRoomList(String responseBody) throws Exception {
         JavaType listType = objectMapper.getTypeFactory().constructParametricType(
                 Result.class,
                 objectMapper.getTypeFactory().constructCollectionType(List.class, RoomRedisDto.class)
         );
-        Result<List<RoomRedisDto>> listResult = objectMapper.readValue(responseBody, listType);
-        List<RoomRedisDto> rooms = listResult.getData();
+        Result<List<RoomRedisDto>> result = objectMapper.readValue(responseBody, listType);
+        return result.getData();
+    }
 
-        // API 응답 검증
-        assertThat(rooms).hasSize(3);  // 총 3개의 방이 조회되어야 함
-        assertThat(rooms).extracting("name")
-                .containsExactlyInAnyOrder("Room 1", "Room 2", "Room 3");  // 다른 사용자가 만든 방도 포함
-        assertThat(rooms.stream()
-                .map(RoomRedisDto::getId)
-                .map(Object::toString)
-                .collect(Collectors.toList()))
-                .containsExactlyInAnyOrderElementsOf(
-                        roomIds.stream()
-                                .map(UUID::toString)
-                                .collect(Collectors.toList())
-                );
-        assertThat(rooms).extracting("participantCount")
-                .containsOnly(1);
-
-        // 1. 개별 방 정보 캐시 확인
+    private void verifyRoomCache(List<UUID> roomIds) {
         for (UUID roomId : roomIds) {
             String roomKey = "chat:room:" + roomId;
             RoomRedisDto cachedRoom = (RoomRedisDto) redisTemplate.opsForValue().get(roomKey);
 
             assertThat(cachedRoom).isNotNull();
             assertThat(cachedRoom.getId()).isEqualTo(roomId.toString());
-            assertThat(cachedRoom.getParticipantCount()).isEqualTo(1);
         }
-
-        // 2. 두 번째 사용자로도 동일한 결과가 조회되는지 확인
-        responseBody = mockMvc.perform(get("/api/room/list")
-                        .param("roomName", "Room")
-                        .param("page", "0")
-                        .param("size", "10")
-                        .param("sort", "createdAt,desc")
-                        .header("Authorization", "Bearer " + token2))
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
-
-        Result<List<RoomRedisDto>> result2 = objectMapper.readValue(responseBody, listType);
-        List<RoomRedisDto> rooms2 = result2.getData();
-
-        assertThat(rooms2).hasSize(3);
-        assertThat(rooms2).extracting("name")
-                .containsExactlyInAnyOrder("Room 1", "Room 2", "Room 3");
     }
 
-    @Test
-    @DisplayName("회원은 현재 자신이 속한 모든 방에 대한 정보를 요청할 수 있다.")
-    void t3() throws Exception {
-        // 방 3개 생성
-        List<UUID> roomIds = new ArrayList<>();
-        for (int i = 1; i <= 3; i++) {
-            RoomCreateRequest request = RoomCreateRequest.of("My Room " + i);
-            String responseBody = mockMvc.perform(post("/api/room")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request))
-                            .header("Authorization", "Bearer " + token))
-                    .andExpect(status().isOk())
-                    .andReturn().getResponse().getContentAsString();
+    // 참여자 수를 검증해야 하는 경우를 위한 별도 메서드
+    private void verifyRoomCacheWithParticipants(List<UUID> roomIds, int expectedParticipants) {
+        for (UUID roomId : roomIds) {
+            String roomKey = "chat:room:" + roomId;
+            RoomRedisDto cachedRoom = (RoomRedisDto) redisTemplate.opsForValue().get(roomKey);
 
-            JavaType type = objectMapper.getTypeFactory().constructParametricType(
-                    Result.class,
-                    RoomCreateResponse.class
-            );
-            Result<RoomCreateResponse> result = objectMapper.readValue(responseBody, type);
-            roomIds.add(UUID.fromString(result.getData().getId()));
+            assertThat(cachedRoom).isNotNull();
+            assertThat(cachedRoom.getId()).isEqualTo(roomId.toString());
+            assertThat(cachedRoom.getParticipantCount()).isEqualTo(expectedParticipants);
         }
+    }
 
-        // Redis에서 사용자의 방 목록 캐시를 제거하여 캐시 미스 상황 만들기
-        redisTemplate.delete("chat:user:홍길동:rooms");
-
-        // 내 방 목록 조회
-        String responseBody = mockMvc.perform(get("/api/room/myList")
-                        .header("Authorization", "Bearer " + token))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
-
-        JavaType type = objectMapper.getTypeFactory().constructParametricType(
-                Result.class,
-                objectMapper.getTypeFactory().constructCollectionType(List.class, RoomRedisDto.class)
-        );
-        Result<List<RoomRedisDto>> result = objectMapper.readValue(responseBody, type);
-        List<RoomRedisDto> myRooms = result.getData();
-
-        // API 응답 검증
-        assertThat(myRooms).hasSize(3);
-        assertThat(myRooms).extracting("name")
-                .containsExactlyInAnyOrder("My Room 1", "My Room 2", "My Room 3");
-        assertThat(myRooms.stream()
-                .map(RoomRedisDto::getId)
-                .map(Object::toString)
-                .collect(Collectors.toList()))
-                .containsExactlyInAnyOrderElementsOf(
-                        roomIds.stream()
-                                .map(UUID::toString)
-                                .collect(Collectors.toList())
-                );
-        assertThat(myRooms).extracting("participantCount")
-                .containsOnly(1);
-
-        // Redis 캐시 검증
-        User user = userService.findByUsername("홍길동");
+    private void verifyUserRoomCache(String username, List<UUID> roomIds) {
+        User user = userService.findByUsername(username);
         String userRoomsKey = "chat:user:" + user.getId() + ":rooms";
-        log.info("UserRoomKey = {}", userRoomsKey);
         Set<Object> cachedRooms = redisTemplate.opsForSet().members(userRoomsKey);
 
         assertThat(cachedRooms).isNotNull();
-        assertThat(cachedRooms).hasSize(3);
+        assertThat(cachedRooms).hasSize(roomIds.size());
         assertThat(cachedRooms.stream()
                 .map(obj -> UUID.fromString((String) obj))
                 .collect(Collectors.toList()))
                 .containsExactlyInAnyOrderElementsOf(roomIds);
-
-        // 개별 방 정보도 Redis에 캐시되었는지 확인
-        for (UUID roomId : roomIds) {
-            String roomKey = "chat:room:" + roomId;
-            RoomRedisDto cachedRoom = (RoomRedisDto) redisTemplate.opsForValue().get(roomKey);
-
-            assertThat(cachedRoom).isNotNull();
-            assertThat(cachedRoom.getId()).isEqualTo(roomId.toString());
-            assertThat(cachedRoom.getParticipantCount()).isEqualTo(1);
-        }
     }
-
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private UserService userService;
-    private static final Logger log = LoggerFactory.getLogger(RoomControllerTest.class);
 }
