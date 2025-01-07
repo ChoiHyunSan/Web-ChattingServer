@@ -81,10 +81,12 @@ function RoomList() {
     }
   };
 
-  const handleJoinRoom = async (roomId) => {
+  const handleJoinRoom = async (roomId, isMyRoom) => {
     try {
       setLoading(true);
-      await axios.post(`/room/${roomId}/join`);
+      if (!isMyRoom) {
+        await axios.post(`/room/${roomId}/join`);
+      }
       navigate(`/room/${roomId}`);
     } catch (error) {
       handleError(error);
@@ -162,7 +164,7 @@ function RoomList() {
                 <ListItem 
                   key={room.id}
                   button 
-                  onClick={() => handleJoinRoom(room.id)}
+                  onClick={() => handleJoinRoom(room.id, true)}
                   sx={{ 
                     mb: 1,
                     border: 1,
@@ -190,7 +192,7 @@ function RoomList() {
                 <ListItem 
                   key={room.id}
                   button 
-                  onClick={() => handleJoinRoom(room.id)}
+                  onClick={() => handleJoinRoom(room.id, false)}
                   sx={{ 
                     mb: 1,
                     border: 1,

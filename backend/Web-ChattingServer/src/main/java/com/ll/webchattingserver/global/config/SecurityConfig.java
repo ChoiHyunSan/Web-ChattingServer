@@ -47,6 +47,7 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers("/ws-stomp/**", "/ws/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/chat/**").authenticated()
                         .requestMatchers("/api/room/**").authenticated()
                         .anyRequest().authenticated()
                 )

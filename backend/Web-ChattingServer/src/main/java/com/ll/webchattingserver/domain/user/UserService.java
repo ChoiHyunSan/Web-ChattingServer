@@ -35,7 +35,6 @@ public class UserService {
         Optional<User> optionalUser = userRepository.findByUsernameOrEmail(username, email);
         if(optionalUser.isPresent()){
             User user = optionalUser.get();
-
             throw user.getUsername().equals(username)
                     ? new DuplicateUsernameException()
                     : new DuplicateEmailException();

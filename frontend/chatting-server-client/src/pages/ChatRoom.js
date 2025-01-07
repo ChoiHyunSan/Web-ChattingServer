@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Client } from '@stomp/stompjs';
 import { 
@@ -27,24 +27,11 @@ function ChatRoom() {
   const clientRef = useRef(null);
   const username = localStorage.getItem('username');
   const messageContainerRef = useRef(null);
-
-  const scrollToBottom = useCallback(() => {
-    if (messageContainerRef.current) {
-      setTimeout(() => {
-        const { scrollHeight } = messageContainerRef.current;
-        messageContainerRef.current.scrollTo({
-          top: scrollHeight,
-          behavior: 'smooth'
-        });
-      }, 0);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (messages.length > 0) {
-      scrollToBottom();
-    }
-  }, [messages, scrollToBottom]);
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [loading, setLoading] = useState(false);
+  const [showLoadMoreButton, setShowLoadMoreButton] = useState(false);
+  const [hasMoreMessages, setHasMoreMessages] = useState(true);
+  const [isLoadingPrevious, setIsLoadingPrevious] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -67,7 +54,11 @@ function ChatRoom() {
         client.subscribe(`/sub/chat/room/${roomId}`, (message) => {
           if (!mounted) return;
           const receivedMessage = JSON.parse(message.body);
-          setMessages((prev) => [...prev, receivedMessage]);
+          setMessages((prev) => [...prev, {
+            sender: receivedMessage.from,
+            message: receivedMessage.message,
+            createdAt: receivedMessage.timestamp
+          }]);
         });
         setConnecting(false);
       },
@@ -118,6 +109,33 @@ function ChatRoom() {
     };
   }, [roomId, handleError]);
 
+  useEffect(() => {
+    const fetchInitialMessages = async () => {
+      try {
+        setLoading(true);
+        const formattedDate = currentDate.toISOString().split('T')[0];
+        
+        const response = await fetch(`http://localhost:8080/api/v1/chat/list/${roomId}/${formattedDate}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        
+        if (!response.ok) throw new Error('Failed to fetch messages');
+        
+        const result = await response.json();
+        setMessages(result.data);
+        
+      } catch (error) {
+        handleError(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchInitialMessages();
+  }, [roomId]);
+
   const sendMessage = () => {
     if (!message.trim() || !clientRef.current?.connected) return;
 
@@ -127,7 +145,8 @@ function ChatRoom() {
         body: JSON.stringify({
           from: username,
           to: roomId,
-          message: message.trim()
+          message: message.trim(),
+          timestamp: new Date().toISOString()
         }),
       });
       setMessage('');
@@ -169,6 +188,74 @@ function ChatRoom() {
     }
   };
 
+  useEffect(() => {
+    const container = messageContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = (e) => {
+      if (e.target.scrollTop === 0) {
+        setShowLoadMoreButton(true);
+      } else {
+        setShowLoadMoreButton(false);
+      }
+    };
+
+    container.scrollTop = container.scrollHeight;
+
+    // 스크롤 이벤트 리스너
+    container.addEventListener('scroll', handleScroll);
+    
+    // 초기 스크롤 상태 확인
+    handleScroll({ target: container });
+
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [messages]);
+
+  const loadPreviousMessages = async () => {
+    try {
+      setIsLoadingPrevious(true);
+      
+      const container = messageContainerRef.current;
+      const oldScrollHeight = container?.scrollHeight || 0;
+      const oldScrollTop = container?.scrollTop || 0;
+
+      const prevDate = new Date(currentDate);
+      prevDate.setDate(prevDate.getDate() - 1);
+      
+      const formattedDate = prevDate.toISOString().split('T')[0];
+      const response = await fetch(`http://localhost:8080/api/v1/chat/list/${roomId}/${formattedDate}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (!response.ok) throw new Error('Failed to fetch messages');
+      
+      const result = await response.json();
+      
+      if (!result.data || result.data.length === 0) {
+        setHasMoreMessages(false);
+        return;
+      }
+
+      setMessages(prevMessages => [...result.data, ...prevMessages]);
+      setCurrentDate(prevDate);
+
+      setTimeout(() => {
+        if (container) {
+          const newScrollHeight = container.scrollHeight;
+          const scrollDiff = newScrollHeight - oldScrollHeight;
+          container.scrollTop = oldScrollTop + scrollDiff;
+        }
+      }, 0);
+
+    } catch (error) {
+      handleError(error);
+    } finally {
+      setIsLoadingPrevious(false);
+    }
+  };
+
   if (connecting) return <LoadingSpinner />;
 
   return (
@@ -203,6 +290,7 @@ function ChatRoom() {
         gap: 2,
         overflow: 'hidden'
       }}>
+        {loading && <LoadingSpinner />}
         <Box
           ref={messageContainerRef}
           sx={{
@@ -227,29 +315,87 @@ function ChatRoom() {
             },
           }}
         >
-          {messages.map((msg, index) => (
-            <Box 
-              key={index} 
-              sx={{ 
-                mb: 1,
-                alignSelf: msg.from === username ? 'flex-end' : 'flex-start',
-                maxWidth: '70%'
-              }}
-            >
-              <Box 
-                sx={{ 
-                  bgcolor: msg.from === username ? 'primary.light' : 'grey.100',
-                  p: 1,
-                  borderRadius: 2
-                }}
+          {showLoadMoreButton && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+              <Button
+                variant="contained"
+                size="small"
+                onClick={loadPreviousMessages}
+                disabled={!hasMoreMessages}
               >
-                <Typography variant="subtitle2" color="text.secondary">
-                  {msg.from}
-                </Typography>
-                <Typography>{msg.message}</Typography>
-              </Box>
+                {hasMoreMessages ? '이전 메시지 보기' : '더 이상 메시지가 없습니다'}
+              </Button>
             </Box>
-          ))}
+          )}
+          {messages.map((msg, index) => {
+            const currentMessageDate = new Date(msg.createdAt).toLocaleDateString();
+            const previousMessage = index > 0 ? messages[index - 1] : null;
+            const previousMessageDate = previousMessage 
+              ? new Date(previousMessage.createdAt).toLocaleDateString() 
+              : null;
+            
+            const showDateDivider = previousMessageDate !== currentMessageDate;
+
+            return (
+              <React.Fragment key={index}>
+                {showDateDivider && (
+                  <Box 
+                    sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      my: 2,
+                      gap: 2
+                    }}
+                  >
+                    <Box sx={{ flex: 1, height: '1px', bgcolor: 'divider' }} />
+                    <Typography variant="body2" color="text.secondary">
+                      {new Date(msg.createdAt).toLocaleDateString('ko-KR', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </Typography>
+                    <Box sx={{ flex: 1, height: '1px', bgcolor: 'divider' }} />
+                  </Box>
+                )}
+                <Box 
+                  sx={{ 
+                    mb: 1,
+                    alignSelf: msg.sender === username ? 'flex-end' : 'flex-start',
+                    maxWidth: '70%'
+                  }}
+                >
+                  <Box 
+                    sx={{ 
+                      bgcolor: msg.sender === username ? 'primary.light' : 'grey.100',
+                      p: 1,
+                      borderRadius: 2
+                    }}
+                  >
+                    <Typography variant="subtitle2" color="text.secondary">
+                      {msg.sender}
+                    </Typography>
+                    <Typography>{msg.message}</Typography>
+                    <Typography 
+                      variant="caption" 
+                      color="text.secondary" 
+                      sx={{ 
+                        display: 'block',
+                        textAlign: msg.sender === username ? 'right' : 'left',
+                        mt: 0.5 
+                      }}
+                    >
+                      {new Date(msg.createdAt).toLocaleTimeString('ko-KR', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                      })}
+                    </Typography>
+                  </Box>
+                </Box>
+              </React.Fragment>
+            );
+          })}
         </Box>
 
         <Box 

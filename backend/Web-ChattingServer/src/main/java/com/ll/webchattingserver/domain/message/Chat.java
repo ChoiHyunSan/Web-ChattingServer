@@ -5,6 +5,7 @@ import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 @Getter
 @Builder
@@ -28,5 +29,5 @@ public class Chat {
 
     @CreatedDate
     @Column(updatable = false)
-    private Timestamp created_at;
+    private LocalDateTime created_at;
 }
