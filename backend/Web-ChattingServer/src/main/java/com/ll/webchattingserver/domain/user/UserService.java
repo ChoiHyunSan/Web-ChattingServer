@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -26,16 +28,17 @@ public class UserService {
     }
 
     private void checkInvalidSignupInput(String username, String email, String password, String passwordCheck) {
-        if(userRepository.findByUsername(username).isPresent()) {
-            throw new DuplicateUsernameException();
-        };
-
-        if(userRepository.findByEmail(email).isPresent()){
-            throw new DuplicateEmailException();
-        }
-
         if(!password.equals(passwordCheck)) {
             throw new PasswordMismatchException();
+        }
+
+        Optional<User> optionalUser = userRepository.findByUsernameOrEmail(username, email);
+        if(optionalUser.isPresent()){
+            User user = optionalUser.get();
+
+            throw user.getUsername().equals(username)
+                    ? new DuplicateUsernameException()
+                    : new DuplicateEmailException();
         }
     }
 
