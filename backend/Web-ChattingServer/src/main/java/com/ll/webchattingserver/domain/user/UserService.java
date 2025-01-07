@@ -46,4 +46,8 @@ public class UserService {
     public User findById(Long id) {
         return userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException(User.class.getPackageName()));
     }
+
+    public boolean checkInvalidUser(String username) {
+        return userRepository.findByUsername(username).isPresent();
+    }
 }
