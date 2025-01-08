@@ -38,6 +38,9 @@ dependencies {
 
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0'  // 버전 변경
 
+    // logstash-logback-encode
+    implementation 'net.logstash.logback:logstash-logback-encoder:7.4'
+
     // wss
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
     implementation 'org.webjars:stomp-websocket:2.3.3-1'
