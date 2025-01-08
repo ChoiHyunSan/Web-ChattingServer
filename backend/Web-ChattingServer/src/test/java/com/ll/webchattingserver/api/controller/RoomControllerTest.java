@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -42,7 +43,8 @@ class RoomControllerTest {
     @Autowired private RedisTemplate<String, Object> redisTemplate;
     @Autowired private UserService userService;
 
-    private String userToken;
+    private String userToken1;
+    private String userToken2;
     private static final String USERNAME = "홍길동";
     private static final String EMAIL = "test@test.com";
     private static final String PASSWORD = "12345";
@@ -50,7 +52,8 @@ class RoomControllerTest {
     @BeforeEach
     void setUp() throws Exception {
         roomTestHelper.clearRedisData();
-        userToken = roomTestHelper.getAuthToken(USERNAME, EMAIL, PASSWORD);
+        userToken1 = roomTestHelper.getAuthToken(USERNAME, EMAIL, PASSWORD);
+        userToken2 = roomTestHelper.getAuthToken(USERNAME + "1", EMAIL + "1", PASSWORD + "1");
     }
 
     @Nested
@@ -63,7 +66,7 @@ class RoomControllerTest {
             String roomName = "New Room";
 
             // When
-            UUID roomId = roomTestHelper.createRoom(userToken, roomName);
+            UUID roomId = roomTestHelper.createRoom(userToken1, roomName);
 
             // Then
             // DB 검증
@@ -83,10 +86,7 @@ class RoomControllerTest {
         @DisplayName("전체 방 목록을 조회할 수 있다")
         void listAllRooms() throws Exception {
             // Given
-            List<UUID> roomIds = new ArrayList<>();
-            for (int i = 1; i <= 2; i++) {
-                roomIds.add(roomTestHelper.createRoom(userToken, "Room " + i));
-            }
+            List<UUID> roomIds = createRooms(userToken1, 2);
 
             String token2 = roomTestHelper.getAuthToken("김철수", "kim@test.com", PASSWORD);
             roomIds.add(roomTestHelper.createRoom(token2, "Room 3"));
@@ -99,7 +99,7 @@ class RoomControllerTest {
                             .param("page", "0")
                             .param("size", "10")
                             .param("sort", "createdAt,desc")
-                            .header("Authorization", "Bearer " + userToken))
+                            .header("Authorization", "Bearer " + userToken1))
                     .andDo(print())
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
@@ -117,16 +117,11 @@ class RoomControllerTest {
         @DisplayName("내 방 목록을 조회할 수 있다")
         void listMyRooms() throws Exception {
             // Given
-            List<UUID> roomIds = new ArrayList<>();
-            for (int i = 1; i <= 3; i++) {
-                roomIds.add(roomTestHelper.createRoom(userToken, "My Room " + i));
-            }
-
-            redisTemplate.delete("chat:user:홍길동:rooms");    // 레디스 정보 삭제
+            List<UUID> roomIds = createRooms(userToken1, 3);
 
             // When
             String responseBody = mockMvc.perform(get("/api/room/myList")
-                            .header("Authorization", "Bearer " + userToken))
+                            .header("Authorization", "Bearer " + userToken1))
                     .andDo(print())
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
@@ -135,10 +130,90 @@ class RoomControllerTest {
             List<RoomRedisDto> myRooms = extractRoomList(responseBody);
             assertThat(myRooms).hasSize(3);
             assertThat(myRooms).extracting("name")
-                    .containsExactlyInAnyOrder("My Room 1", "My Room 2", "My Room 3");
+                    .containsExactlyInAnyOrder("Room 1", "Room 2", "Room 3");
 
             verifyUserRoomCache(USERNAME, roomIds);
         }
+    }
+
+    @Nested
+    @DisplayName("조회된 방에 참가")
+    class JoinRoom{
+
+        @Test
+        @DisplayName("남이 만든 방에 참가하면, 내 방 목록에 조회된다.")
+        void joinOthersRoom() throws Exception {
+            // Given
+            List<UUID> roomIds = createRooms(userToken1, 3);
+
+            // When
+            for(UUID roomId : roomIds) {
+                String joinRoomResponse = mockMvc.perform(post("/api/room/" + roomId + "/join")
+                                .header("Authorization", "Bearer " + userToken2))
+                        .andDo(print())
+                        .andExpect(status().isOk())
+                        .andReturn().getResponse().getContentAsString();
+            }
+
+            String myRoomsResponse = mockMvc.perform(get("/api/room/myList")
+                            .header("Authorization", "Bearer " + userToken2))
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andReturn().getResponse().getContentAsString();
+
+            // Then
+            List<RoomRedisDto> myRooms = extractRoomList(myRoomsResponse);
+            assertThat(myRooms).hasSize(3);
+            assertThat(myRooms).extracting("name")
+                    .containsExactlyInAnyOrder("Room 1", "Room 2", "Room 3");
+
+            verifyUserRoomCache(USERNAME, roomIds);
+        }
+    }
+
+    @Nested
+    @DisplayName("방에서 영구적으로 나가기")
+    class LeaveRoom {
+
+        @Test
+        @DisplayName("방에서 나가면, 자신의 목록에서 사라진다.")
+        void joinOthersRoom() throws Exception {
+            // Given
+            List<UUID> roomIds = createRooms(userToken1, 3);
+
+            // When
+            for(UUID roomId : roomIds) {
+                String joinRoomResponse = mockMvc.perform(post("/api/room/" + roomId + "/leave")
+                                .header("Authorization", "Bearer " + userToken1))
+                        .andDo(print())
+                        .andExpect(status().isOk())
+                        .andReturn().getResponse().getContentAsString();
+            }
+
+            String myRoomsResponse = mockMvc.perform(get("/api/room/myList")
+                            .header("Authorization", "Bearer " + userToken1))
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andReturn().getResponse().getContentAsString();
+
+            // Then
+            List<RoomRedisDto> myRooms = extractRoomList(myRoomsResponse);
+            assertThat(myRooms).hasSize(0);
+
+            User user = userService.findByUsername(USERNAME);
+            String userRoomsKey = "chat:user:" + user.getId() + ":rooms";
+            Set<Object> cachedRooms = redisTemplate.opsForSet().members(userRoomsKey);
+            assertThat(cachedRooms).size().isEqualTo(0);
+        }
+    }
+
+    private List<UUID> createRooms(String userToken, int count) throws Exception {
+        List<UUID> roomIds = new ArrayList<>();
+        for (int i = 1; i <= count; i++) {
+            roomIds.add(roomTestHelper.createRoom(userToken, "Room " + i));
+        }
+        redisTemplate.delete("chat:user:홍길동:rooms");    // 레디스 정보 삭제
+        return roomIds;
     }
 
     private List<RoomRedisDto> extractRoomList(String responseBody) throws Exception {

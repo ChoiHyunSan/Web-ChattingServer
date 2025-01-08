@@ -1,7 +1,6 @@
 package com.ll.webchattingserver.api.controller;
 
 import com.ll.webchattingserver.api.Result;
-import com.ll.webchattingserver.api.dto.request.chat.Message;
 import com.ll.webchattingserver.api.dto.response.chat.MessageResponse;
 import com.ll.webchattingserver.domain.message.ChatService;
 import lombok.RequiredArgsConstructor;
@@ -10,7 +9,6 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j

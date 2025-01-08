@@ -9,10 +9,12 @@ import com.ll.webchattingserver.api.dto.response.room.RoomJoinResponse;
 import com.ll.webchattingserver.api.dto.response.room.RoomLeaveResponse;
 import com.ll.webchattingserver.domain.room.RoomCond;
 import com.ll.webchattingserver.domain.room.RoomService;
+import com.ll.webchattingserver.global.security.UserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
@@ -34,7 +36,7 @@ public class RoomController {
     @PostMapping
     public Result<RoomCreateResponse> create(
             @RequestBody @Valid RoomCreateRequest request,
-                                 Principal principal){
+            @AuthenticationPrincipal UserPrincipal principal){
         return Result.success(roomService.create(principal.getName(), request.getRoomName()));
     }
 
@@ -67,9 +69,9 @@ public class RoomController {
     )
     @GetMapping("/myList")
     public Result<List<RoomRedisDto>> getList(
-            Principal principal
+            @AuthenticationPrincipal UserPrincipal principal
     ){
-        return Result.success(roomService.getMyList(principal.getName()));
+        return Result.success(roomService.getMyList(principal.getId()));
     }
 
     @Operation(
@@ -79,7 +81,7 @@ public class RoomController {
     @PostMapping("/{roomId}/join")
     public Result<RoomJoinResponse> join(
             @PathVariable("roomId") UUID roomId,
-            Principal principal
+            @AuthenticationPrincipal UserPrincipal principal
     ) {
         return Result.success(roomService.join(principal.getName(), roomId));
     }
@@ -91,8 +93,8 @@ public class RoomController {
     @PostMapping("/{roomId}/leave")
     public Result<RoomLeaveResponse> leave(
             @PathVariable("roomId") UUID roomId,
-            Principal principal
+            @AuthenticationPrincipal UserPrincipal principal
     ){
-        return Result.success(roomService.leave(principal.getName(), roomId));
+        return Result.success(roomService.leave(principal.getId(), roomId));
     }
 }

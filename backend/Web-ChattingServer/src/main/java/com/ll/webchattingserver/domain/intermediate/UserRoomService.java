@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -26,15 +27,15 @@ public class UserRoomService {
         return userRoomRepository.findByRoom(room);
     }
 
-    public void delete(UserRoom userRoom) {
-        userRoomRepository.delete(userRoom);
-    }
-
     public List<Room> findRoomsByUserId(Long id) {
         return userRoomQueryRepository.findRoomsByUserId(id);
     }
 
     public List<UserRoom> findByUserAndRoom(User user, Room room) {
        return userRoomQueryRepository.findByUserAndRoom(user, room);
+    }
+
+    public void deleteUserRoom(UUID roomId, Long userId) {
+        userRoomQueryRepository.deleteByRoomIdAndUserId(roomId, userId);
     }
 }

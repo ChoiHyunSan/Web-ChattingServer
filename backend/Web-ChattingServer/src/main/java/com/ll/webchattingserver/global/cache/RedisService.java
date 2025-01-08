@@ -36,8 +36,8 @@ public class RedisService {
     /**
      *  Key : User / Value : Set<roomID>
      */
-    private static String generateUserRoomSetKey(User user) {
-        return "chat:user:" + user.getId() + ":rooms";
+    private static String generateUserRoomSetKey(Long userId) {
+        return "chat:user:" + userId + ":rooms";
     }
 
     // 기본 캐싱 작업
@@ -55,19 +55,19 @@ public class RedisService {
         }
     }
 
-    public void mappingUserAndRoom(User user, UUID roomId) {
+    public void mappingUserAndRoom(Long userId, UUID roomId) {
         try {
-            String roomsKey = generateUserRoomSetKey(user);
+            String roomsKey = generateUserRoomSetKey(userId);
             redisTemplate.opsForSet().add(roomsKey, roomId);
             log.info("RoomsKey : {}, roomId : {}", roomsKey, roomId);
         } catch (Exception e) {
-            log.warn("Failed to map user to room in cache: user={}, room={}", user.getId(), roomId, e);
+            log.warn("Failed to map user to room in cache: user={}, room={}", userId, roomId, e);
         }
     }
 
-    public Optional<List<RoomRedisDto>> getUserRooms(User user) {
+    public Optional<List<RoomRedisDto>> getUserRooms(Long userId) {
 
-        String key = generateUserRoomSetKey(user);
+        String key = generateUserRoomSetKey(userId);
         Set<Object> roomIds = redisTemplate.opsForSet().members(key);
 
         log.info("RoomIds: {}", roomIds);
@@ -97,19 +97,19 @@ public class RedisService {
     }
 
     // 방 참가 관련 캐싱
-    public void joinRoom(User user, UUID roomId) {
+    public void joinRoom(Long userId, UUID roomId) {
         try {
-            mappingUserAndRoom(user, roomId);
-            log.debug("User {} joined room {} in cache", user.getId(), roomId);
+            mappingUserAndRoom(userId, roomId);
+            log.debug("User {} joined room {} in cache", userId, roomId);
         } catch (Exception e) {
-            log.warn("Failed to cache room join: user={}, room={}", user.getId(), roomId, e);
+            log.warn("Failed to cache room join: user={}, room={}", userId, roomId, e);
         }
     }
 
     public void createRoom(Room room, User user) {
         try {
             setRoom(room);
-            mappingUserAndRoom(user, room.getId());
+            mappingUserAndRoom(user.getId(), room.getId());
             log.debug("Room created in cache: {}", room.getId());
         } catch (Exception e) {
             log.warn("Failed to cache new room: {}", room.getId(), e);
@@ -117,13 +117,13 @@ public class RedisService {
     }
 
     // 방 나가기 관련 캐싱
-    public void leaveRoom(User user, UUID roomId) {
+    public void leaveRoom(Long userId, UUID roomId) {
         try {
-            String userRoomSetKey = generateUserRoomSetKey(user);
+            String userRoomSetKey = generateUserRoomSetKey(userId);
             redisTemplate.opsForSet().remove(userRoomSetKey, roomId);
-            log.debug("User {} left room {} in cache", user.getId(), roomId);
+            log.debug("User {} left room {} in cache", userId, roomId);
         } catch (Exception e) {
-            log.warn("Failed to cache room leave: user={}, room={}", user.getId(), roomId, e);
+            log.warn("Failed to cache room leave: user={}, room={}", userId, roomId, e);
         }
     }
 
@@ -138,25 +138,25 @@ public class RedisService {
         }
     }
 
-    public void cacheUserRooms(User user, List<RoomRedisDto> rooms) {
+    public void cacheUserRooms(Long userId, List<RoomRedisDto> rooms) {
         rooms.forEach(room -> {
             setRoom(room);
-            mappingUserAndRoom(user,UUID.fromString(room.getId()));
+            mappingUserAndRoom(userId ,UUID.fromString(room.getId()));
         });
     }
 
     // 방 정보와 사용자 정보를 함께 캐싱
-    public void cacheRoomWithUser(Room room, User user) {
+    public void cacheRoomWithUser(Room room, Long userId) {
         setRoom(room);
-        mappingUserAndRoom(user, room.getId());
+        mappingUserAndRoom(userId, room.getId());
     }
 
     // 방 나가기 시 캐시 업데이트
-    public void updateRoomCache(Room room, User user) {
+    public void updateRoomCache(Room room, Long userId) {
         if (getRoom(room.getId()).isPresent()) {
             setRoom(room);
         }
-        leaveRoom(user, room.getId());
+        leaveRoom(userId, room.getId());
     }
 }
 

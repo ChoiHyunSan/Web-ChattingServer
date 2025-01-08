@@ -5,13 +5,11 @@ import com.ll.webchattingserver.api.dto.response.room.RoomCreateResponse;
 import com.ll.webchattingserver.api.dto.response.room.RoomJoinResponse;
 import com.ll.webchattingserver.api.dto.response.room.RoomLeaveResponse;
 import com.ll.webchattingserver.domain.intermediate.UserRoom;
-import com.ll.webchattingserver.domain.intermediate.UserRoomRepository;
 import com.ll.webchattingserver.domain.intermediate.UserRoomService;
 import com.ll.webchattingserver.domain.user.User;
 import com.ll.webchattingserver.domain.user.UserService;
 import com.ll.webchattingserver.global.cache.RedisService;
 import com.ll.webchattingserver.global.exception.ResourceNotFoundException;
-import io.lettuce.core.RedisConnectionException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -53,26 +51,24 @@ public class RoomService {
         return roomQueryRepository.findByCond(cond);
     }
 
-    public List<RoomRedisDto> getMyList(String name) {
-        User user = userService.findByUsername(name);
-
-        Optional<List<RoomRedisDto>> userRooms = redisService.getUserRooms(user);
+    public List<RoomRedisDto> getMyList(Long userId) {
+        Optional<List<RoomRedisDto>> userRooms = redisService.getUserRooms(userId);
         if(userRooms.isPresent()) {
             return userRooms.get();
         }
 
         log.info("레디스가 비어있네요");
 
-        List<Room> rooms = userRoomService.findRoomsByUserId(user.getId());
+        List<Room> rooms = userRoomService.findRoomsByUserId(userId);
         List<RoomRedisDto> roomDtos = rooms.stream()
                 .map(RoomRedisDto::of)
                 .toList();
 
         // 캐시 갱신
         try {
-            redisService.cacheUserRooms(user, roomDtos);
+            redisService.cacheUserRooms(userId, roomDtos);
         } catch (Exception e) {
-            log.warn("Failed to cache user rooms: user={}", user.getId(), e);
+            log.warn("Failed to cache user rooms: user={}", userId, e);
         }
 
         return roomDtos;
@@ -93,7 +89,7 @@ public class RoomService {
             if (redisService.getRoom(roomId).isPresent()) {
                 redisService.setRoom(room);
             }
-            redisService.joinRoom(user, roomId);
+            redisService.joinRoom(user.getId(), roomId);
         } catch (Exception e) {
             log.warn("Failed to update Redis cache for room join: room={}, user={}", roomId, user.getId());
         }
@@ -102,12 +98,14 @@ public class RoomService {
     }
 
     @Transactional
-    public RoomLeaveResponse leave(String name, UUID roomId){
-        User user = userService.findByUsername(name);
+    public RoomLeaveResponse leave(Long userId, UUID roomId){
         Room room = findRoom(roomId);
 
         List<UserRoom> userRooms = userRoomService.findByRoom(room);
         try {
+            // UserRoom 데이터 삭제
+            userRoomService.deleteUserRoom(roomId, userId);
+
             // 방이 사라지는 경우 (= 자기 자신 밖에 방에 없는 경우)
             if (userRooms.size() == 1) {
                 // 채팅방 삭제 + 레디스 방 정보 삭제
@@ -119,15 +117,12 @@ public class RoomService {
                     redisService.setRoom(room);
                 }
             }
-            
-            // UserRoom 데이터 삭제
-            deleteUserRoom(userRooms, user);
         } catch (Exception e) {
-            log.warn("Failed to update Redis cache for room leave: room={}, user={}", roomId, user.getId());
+            log.warn("Failed to update Redis cache for room leave: room={}, user={}", roomId, userId);
         }
 
         // 레디스 상에서 유저의 방 목록을 제거
-        redisService.leaveRoom(user, roomId);
+        redisService.leaveRoom(userId, roomId);
         return RoomLeaveResponse.of();
     }
 
@@ -141,11 +136,5 @@ public class RoomService {
         return roomRepository.findById(roomId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Room not found: " + roomId));
-    }
-
-    private void deleteUserRoom(List<UserRoom> userRooms, User user) {
-        userRooms.stream()
-                .filter(userRoom -> userRoom.getUser().getId().equals(user.getId()))
-                .forEach(userRoomService::delete);
     }
 }
