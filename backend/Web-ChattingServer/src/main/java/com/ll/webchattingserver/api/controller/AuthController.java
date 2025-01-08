@@ -8,7 +8,6 @@ import com.ll.webchattingserver.api.dto.response.auth.TokenResponse;
 import com.ll.webchattingserver.domain.user.UserService;
 import com.ll.webchattingserver.global.jwt.JwtProvider;
 import com.ll.webchattingserver.global.security.CustomUserDetails;
-import com.ll.webchattingserver.global.security.UserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -40,8 +39,8 @@ public class AuthController {
 
         CustomUserDetails userDetails = (CustomUserDetails) authenticate.getPrincipal();
         return Result.success(TokenResponse.of(
-                jwtProvider.createAccessToken(userDetails.getUser()),
-                jwtProvider.createRefreshToken(userDetails.getUser()),
+                jwtProvider.createAccessToken(userDetails.getUsername(), userDetails.getId()),
+                jwtProvider.createRefreshToken(userDetails.getUsername(), userDetails.getId()),
                 request.getUsername()));
     }
 
@@ -54,9 +53,7 @@ public class AuthController {
             @RequestHeader("Authorization") String token
     ) {
         String extractToken = jwtProvider.extractToken(token);
-        if(jwtProvider.validateToken(extractToken)) {
-
-        }
+        jwtProvider.validateRefreshToken(extractToken);
 
         String username = jwtProvider.getUsername(extractToken);
         Long userId = jwtProvider.getUserId(extractToken);

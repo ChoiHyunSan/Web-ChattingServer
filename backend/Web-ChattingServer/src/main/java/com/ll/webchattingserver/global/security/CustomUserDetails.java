@@ -18,7 +18,11 @@ import java.util.List;
 @Builder
 public class CustomUserDetails implements UserDetails {
 
-    private final User user;
+    @Getter
+    private final Long id;
+    private final String username;
+    private final String password;
+    private final Collection<? extends GrantedAuthority> authorities;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -27,12 +31,16 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public String getPassword() {
-        return user.getPassword();
+        return password;
     }
 
     @Override
     public String getUsername() {
-        return user.getUsername();
+        return username;
+    }
+
+    public Collection<? extends GrantedAuthority> getRoles() {
+        return authorities;
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.ll.webchattingserver.global.jwt;
 
 import com.ll.webchattingserver.domain.user.User;
+import com.ll.webchattingserver.global.exception.InvalidTokenAccessException;
 import com.ll.webchattingserver.global.security.UserPrincipal;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -96,8 +97,12 @@ public class JwtProvider {
                 .compact();
     }
 
-    public boolean validateToken(String token) {
-        return parseToken(token, secretKey);
+    public void validateToken(String token) {
+        parseToken(token, secretKey);
+    }
+
+    public void validateRefreshToken(String token) {
+        parseToken(token, refreshSecretKey);
     }
 
     public boolean parseToken(String token, Key key) {
@@ -108,7 +113,7 @@ public class JwtProvider {
                     .parseClaimsJws(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
-            return false;
+            throw new InvalidTokenAccessException();
         }
     }
 

@@ -34,9 +34,10 @@ public class JwtAuthenticationInterceptor implements ChannelInterceptor {
         switch (accessor.getCommand()) {
             case CONNECT -> {
                 String token = extractToken(accessor);
-                if (token != null && jwtProvider.validateToken(token)) {
+                jwtProvider.validateToken(token);
+                if (token != null) {
                     String username = jwtProvider.getUsername(token);
-                    if(userService.checkInvalidUser(username)){
+                    if(username != null) {
                         accessor.setUser(() -> username);
                     }
                     userRooms.putIfAbsent(username, ConcurrentHashMap.newKeySet());
