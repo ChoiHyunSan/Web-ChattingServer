@@ -1,7 +1,6 @@
 package com.ll.webchattingserver.global.jwt;
 
 import com.ll.webchattingserver.domain.user.UserService;
-import com.ll.webchattingserver.global.security.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;

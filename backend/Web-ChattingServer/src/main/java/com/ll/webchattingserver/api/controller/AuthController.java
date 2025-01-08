@@ -6,12 +6,14 @@ import com.ll.webchattingserver.api.dto.request.auth.SignupRequest;
 import com.ll.webchattingserver.api.dto.response.auth.SignupResponse;
 import com.ll.webchattingserver.api.dto.response.auth.TokenResponse;
 import com.ll.webchattingserver.domain.user.UserService;
-import com.ll.webchattingserver.global.security.JwtProvider;
+import com.ll.webchattingserver.global.jwt.JwtProvider;
+import com.ll.webchattingserver.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,9 +34,15 @@ public class AuthController {
             description = "로그인을 진행합니다."
     )
     @PostMapping("/login")
-    public Result<TokenResponse> login(@RequestBody LoginRequest request) {
-        authenticationManager.authenticate( new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
-        String token = jwtProvider.createToken(request.getUsername(), "ROLE_USER");
+    public Result<TokenResponse> login(
+            @RequestBody LoginRequest request
+    ) {
+        Authentication authenticate = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
+
+        CustomUserDetails userDetails = (CustomUserDetails) authenticate.getPrincipal();
+
+        String token = jwtProvider.createToken(userDetails.getUser(), "ROLE_USER");
         return Result.success(TokenResponse.of(token, request.getUsername()));
     }
 
