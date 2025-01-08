@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,6 +22,7 @@ import java.security.Principal;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Tag(name = "Room API", description = "Room API")
 @RestController
 @RequiredArgsConstructor
@@ -37,6 +39,8 @@ public class RoomController {
     public Result<RoomCreateResponse> create(
             @RequestBody @Valid RoomCreateRequest request,
             @AuthenticationPrincipal UserPrincipal principal){
+        log.info("create: {}", request);
+        log.info("principal: {}", principal.getName());
         return Result.success(roomService.create(principal.getName(), request.getRoomName()));
     }
 

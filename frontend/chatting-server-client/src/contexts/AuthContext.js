@@ -1,53 +1,48 @@
-import { createContext, useState, useContext, useEffect } from 'react';
+import { createContext, useState, useContext } from 'react';
 import axios from '../api/axios';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  // 토큰으로 사용자 정보 가져오기
-  const checkAuth = async () => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      try {
-        // 토큰 유효성 검증 API 호출
-        const response = await axios.get('/auth/validate');
-        setUser(response.data.data);
-      } catch (error) {
-        // 토큰이 유효하지 않으면 로그아웃
-        localStorage.removeItem('token');
-        localStorage.removeItem('username');
-        setUser(null);
-      }
-    }
-    setLoading(false);
-  };
+  const [user, setUser] = useState(() => {
+    const username = localStorage.getItem('username');
+    return username ? { username } : null;
+  });
 
   // 로그인
   const login = async (username, password) => {
-    const response = await axios.post('/auth/login', { username, password });
-    const { token } = response.data.data;
-    localStorage.setItem('token', token);
-    localStorage.setItem('username', username);
-    setUser({ username });
-    return response.data;
+    try {
+      const response = await axios.post('/api/auth/login', { username, password });
+      console.log('로그인 응답:', response.data);
+      
+      const { data } = response.data;
+      const { token, refreshToken, username: userName } = data;
+      
+      // 토큰 저장 �후 값 확인
+      localStorage.setItem('token', token);
+      console.log('저장된 토��:', localStorage.getItem('token'));
+      
+      localStorage.setItem('refreshToken', refreshToken);
+      localStorage.setItem('username', userName);
+      
+      setUser({ username: userName });
+      return data;
+    } catch (error) {
+      console.error('로그인 에러:', error);
+      throw error;
+    }
   };
 
   // 로그아웃
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('username');
     setUser(null);
   };
 
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

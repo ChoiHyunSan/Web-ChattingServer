@@ -47,6 +47,15 @@ public class JwtProvider {
         }
     }
 
+    public Long getUserId(String token) {
+        try {
+            Claims claims = getClaims(token, secretKey);
+            return claims.get("id", Long.class);
+        } catch (JwtException | IllegalArgumentException e) {
+            return null;
+        }
+    }
+
     private Claims getClaims(String token, Key key) {
         return Jwts.parserBuilder()
                 .setSigningKey(key)
@@ -55,26 +64,46 @@ public class JwtProvider {
                 .getBody();
     }
 
-    public String createToken(User user, String role) {
-        Claims claims = Jwts.claims().setSubject(user.getUsername());
-        claims.put("username", user.getUsername());
-        claims.put("id", user.getId());
+    public String createRefreshToken(User user) {
+        return createToken(user.getUsername(), user.getId(), refreshSecretKey, refreshTokenTimeForMinute);
+    }
+
+    public String createRefreshToken(String username, Long userId) {
+        return createToken(username, userId, refreshSecretKey, refreshTokenTimeForMinute);
+    }
+
+    public String createAccessToken(User user) {
+        return createToken(user.getUsername(), user.getId(), secretKey, tokenTimeForMinute);
+    }
+
+    public String createAccessToken(String username, Long userId) {
+        return createToken(username, userId, secretKey, tokenTimeForMinute);
+    }
+
+    public String createToken(String username, Long userId, Key key, long expireTime) {
+        Claims claims = Jwts.claims().setSubject(username);
+        claims.put("username", username);
+        claims.put("id", userId);
 
         Date now = new Date();
-        Date validity = new Date(now.getTime() + tokenTimeForMinute);
+        Date validity = new Date(now.getTime() + expireTime);
 
         return Jwts.builder()
                 .setClaims(claims)
                 .setIssuedAt(now)
                 .setExpiration(validity)
-                .signWith(secretKey)
+                .signWith(key)
                 .compact();
     }
 
     public boolean validateToken(String token) {
+        return parseToken(token, secretKey);
+    }
+
+    public boolean parseToken(String token, Key key) {
         try {
             Jwts.parserBuilder()
-                    .setSigningKey(secretKey)
+                    .setSigningKey(key)
                     .build()
                     .parseClaimsJws(token);
             return true;
@@ -84,6 +113,7 @@ public class JwtProvider {
     }
 
     private final ClientResources clientResources;
+
     public JwtProvider(ClientResources clientResources) {
         this.clientResources = clientResources;
     }
@@ -91,5 +121,12 @@ public class JwtProvider {
     public UserPrincipal getUserPrincipal(String token) {
         Claims claims = getClaims(token, secretKey);
         return new UserPrincipal(claims.get("id", Long.class), claims.get("username", String.class));
+    }
+
+    public String extractToken(String bearerToken) {
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
+        return null;
     }
 }

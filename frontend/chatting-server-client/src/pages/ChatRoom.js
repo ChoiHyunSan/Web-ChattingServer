@@ -103,7 +103,9 @@ function ChatRoom() {
       console.log('Cleaning up WebSocket connection...');
       mounted = false;
       if (client.active) {
-        client.deactivate();
+        client.deactivate().then(() => {
+          console.log('WebSocket connection closed successfully');
+        }).catch(console.error);
       }
       clientRef.current = null;
     };

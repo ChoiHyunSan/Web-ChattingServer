@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Container, 
@@ -17,15 +17,20 @@ import {
   Typography,
   AppBar,
   Toolbar,
-  IconButton
+  IconButton,
+  CircularProgress
 } from '@mui/material';
 import LogoutIcon from '@mui/icons-material/Logout';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { useAuth } from '../contexts/AuthContext';
-import axios from '../api/axios';
-import LoadingSpinner from '../components/LoadingSpinner';
 import { useError } from '../hooks/useError';
 import AlertSnackbar from '../components/AlertSnackbar';
+
+const LoadingSpinner = () => (
+  <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+    <CircularProgress />
+  </Box>
+);
 
 function RoomList() {
   const navigate = useNavigate();
@@ -38,39 +43,109 @@ function RoomList() {
   const [newRoomName, setNewRoomName] = useState('');
   const [tabValue, setTabValue] = useState(0);
 
+  const fetchRooms = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('토큰이 없습니다');
+        navigate('/login');
+        return;
+      }
+
+      const headers = new Headers({
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      });
+
+      const response = await fetch('http://localhost:8080/api/room/list', { 
+        method: 'GET',
+        headers: headers,
+        mode: 'cors',
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const responseData = await response.json();
+      console.log('Rooms response:', responseData);
+      
+      // data 필드에서 배열 추출
+      const rooms = responseData.data || [];
+      setRooms(Array.isArray(rooms) ? rooms : []);
+
+    } catch (error) {
+      console.error('Fetch error:', error);
+      handleError(error);
+    }
+  }, [handleError, navigate]);
+
+  const fetchMyRooms = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('토큰이 없습니다');
+        navigate('/login');
+        return;
+      }
+
+      const headers = new Headers({
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      });
+
+      const response = await fetch('http://localhost:8080/api/room/myList', { 
+        method: 'GET',
+        headers: headers,
+        mode: 'cors',
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const responseData = await response.json();
+      console.log('MyRooms response:', responseData);
+      
+      // data 필드에서 배열 추출
+      const myRooms = responseData.data || [];
+      setMyRooms(Array.isArray(myRooms) ? myRooms : []);
+
+    } catch (error) {
+      console.error('Fetch error:', error);
+      handleError(error);
+    }
+  }, [handleError, navigate]);
+
   useEffect(() => {
-    fetchRooms();
-    fetchMyRooms();
-  }, []);
+    Promise.all([fetchRooms(), fetchMyRooms()]).catch(error => {
+      console.error('Error fetching data:', error);
+    });
+  }, [fetchRooms, fetchMyRooms]);
 
-  const fetchRooms = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get('/room/list');
-      setRooms(response.data.data);
-    } catch (error) {
-      handleError(error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const handleRefresh = useCallback(async () => {
+    await Promise.all([fetchRooms(), fetchMyRooms()]);
+  }, [fetchRooms, fetchMyRooms]);
 
-  const fetchMyRooms = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get('/room/myList');
-      setMyRooms(response.data.data);
-    } catch (error) {
-      handleError(error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    handleRefresh();
+  }, [handleRefresh]);
 
   const handleCreateRoom = async () => {
     try {
       setLoading(true);
-      await axios.post('/room', { roomName: newRoomName });
+      await fetch('http://localhost:8080/api/room', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ roomName: newRoomName })
+      });
       setOpen(false);
       setNewRoomName('');
       await Promise.all([fetchRooms(), fetchMyRooms()]);
@@ -85,7 +160,12 @@ function RoomList() {
     try {
       setLoading(true);
       if (!isMyRoom) {
-        await axios.post(`/room/${roomId}/join`);
+        await fetch(`http://localhost:8080/api/room/${roomId}/join`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
       }
       navigate(`/room/${roomId}`);
     } catch (error) {
@@ -98,26 +178,6 @@ function RoomList() {
   const handleLogout = () => {
     logout();
     navigate('/login');
-  };
-
-  const handleRefresh = async () => {
-    try {
-      setLoading(true);
-      const [allRoomsResponse, myRoomsResponse] = await Promise.all([
-        axios.get('/room/list'),
-        axios.get('/room/myList')
-      ]);
-
-      const allRoomsData = await allRoomsResponse.data;
-      const myRoomsData = await myRoomsResponse.data;
-
-      setRooms(allRoomsData.data);
-      setMyRooms(myRoomsData.data);
-    } catch (error) {
-      handleError(new Error('채팅방 목록을 불러오는데 실패했습니다.'));
-    } finally {
-      setLoading(false);
-    }
   };
 
   if (loading) return <LoadingSpinner />;
@@ -160,25 +220,26 @@ function RoomList() {
 
           {tabValue === 0 && (
             <List>
-              {myRooms.map((room) => (
-                <ListItem 
-                  key={room.id}
-                  button 
-                  onClick={() => handleJoinRoom(room.id, true)}
-                  sx={{ 
-                    mb: 1,
-                    border: 1,
-                    borderColor: 'divider',
-                    borderRadius: 1
-                  }}
-                >
-                  <ListItemText 
-                    primary={room.name} 
-                    secondary={`참여자 수: ${room.participantCount}`} 
-                  />
-                </ListItem>
-              ))}
-              {myRooms.length === 0 && (
+              {Array.isArray(myRooms) && myRooms.length > 0 ? (
+                myRooms.map((room) => (
+                  <ListItem 
+                    key={room.id}
+                    button 
+                    onClick={() => handleJoinRoom(room.id, true)}
+                    sx={{ 
+                      mb: 1,
+                      border: 1,
+                      borderColor: 'divider',
+                      borderRadius: 1
+                    }}
+                  >
+                    <ListItemText 
+                      primary={room.name} 
+                      secondary={`참여자 수: ${room.participantCount}`} 
+                    />
+                  </ListItem>
+                ))
+              ) : (
                 <Typography color="text.secondary" sx={{ mt: 2, textAlign: 'center' }}>
                   참여 중인 채팅방이 없습니다.
                 </Typography>
@@ -188,25 +249,26 @@ function RoomList() {
 
           {tabValue === 1 && (
             <List>
-              {rooms.map((room) => (
-                <ListItem 
-                  key={room.id}
-                  button 
-                  onClick={() => handleJoinRoom(room.id, false)}
-                  sx={{ 
-                    mb: 1,
-                    border: 1,
-                    borderColor: 'divider',
-                    borderRadius: 1
-                  }}
-                >
-                  <ListItemText 
-                    primary={room.name} 
-                    secondary={`참여자 수: ${room.participantCount}`} 
-                  />
-                </ListItem>
-              ))}
-              {rooms.length === 0 && (
+              {Array.isArray(rooms) && rooms.length > 0 ? (
+                rooms.map((room) => (
+                  <ListItem 
+                    key={room.id}
+                    button 
+                    onClick={() => handleJoinRoom(room.id, false)}
+                    sx={{ 
+                      mb: 1,
+                      border: 1,
+                      borderColor: 'divider',
+                      borderRadius: 1
+                    }}
+                  >
+                    <ListItemText 
+                      primary={room.name} 
+                      secondary={`참여자 수: ${room.participantCount}`} 
+                    />
+                  </ListItem>
+                ))
+              ) : (
                 <Typography color="text.secondary" sx={{ mt: 2, textAlign: 'center' }}>
                   생성된 채팅방이 없습니다.
                 </Typography>

@@ -28,11 +28,13 @@ function Login() {
     password: '',
   });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    
     try {
-      await login(formData.username, formData.password);
+      setLoading(true);
+      await login(formData.get('username'), formData.get('password'));
       navigate('/');
     } catch (error) {
       handleError(error);
