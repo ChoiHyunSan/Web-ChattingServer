@@ -5,9 +5,10 @@ import com.ll.webchattingserver.global.security.UserPrincipal;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import io.lettuce.core.resource.ClientResources;
+import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
@@ -15,13 +16,31 @@ import java.util.Date;
 
 @Component
 public class JwtProvider {
-    private final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
-    
-    private final long accessTokenValidityInMilliseconds = 1000L * 60 * 60; // 1시간
+
+    @Value("${token.secret-key}")
+    private String secretKeyStr;
+
+    @Value("${token.refresh-secret-key}")
+    private String refreshSecretKeyStr;
+
+    @Value("${token.token-time}")
+    private long tokenTimeForMinute;
+
+    @Value("${token.refresh-token-time}")
+    private long refreshTokenTimeForMinute;
+
+    private Key secretKey;
+    private Key refreshSecretKey;
+
+    @PostConstruct
+    public void init() {
+        this.secretKey = Keys.hmacShaKeyFor(secretKeyStr.getBytes());
+        this.refreshSecretKey = Keys.hmacShaKeyFor(refreshSecretKeyStr.getBytes());
+    }
 
     public String getUsername(String token) {
         try {
-            Claims claims = getClaims(token, key);
+            Claims claims = getClaims(token, secretKey);
             return claims.get("username", String.class);
         } catch (JwtException | IllegalArgumentException e) {
             return null;
@@ -42,20 +61,20 @@ public class JwtProvider {
         claims.put("id", user.getId());
 
         Date now = new Date();
-        Date validity = new Date(now.getTime() + accessTokenValidityInMilliseconds);
+        Date validity = new Date(now.getTime() + tokenTimeForMinute);
 
         return Jwts.builder()
                 .setClaims(claims)
                 .setIssuedAt(now)
                 .setExpiration(validity)
-                .signWith(key)
+                .signWith(secretKey)
                 .compact();
     }
 
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder()
-                    .setSigningKey(key)
+                    .setSigningKey(secretKey)
                     .build()
                     .parseClaimsJws(token);
             return true;
@@ -64,14 +83,13 @@ public class JwtProvider {
         }
     }
 
+    private final ClientResources clientResources;
     public JwtProvider(ClientResources clientResources) {
         this.clientResources = clientResources;
     }
 
-    private final ClientResources clientResources;
-
     public UserPrincipal getUserPrincipal(String token) {
-        Claims claims = getClaims(token, key);
+        Claims claims = getClaims(token, secretKey);
         return new UserPrincipal(claims.get("id", Long.class), claims.get("username", String.class));
     }
 }
