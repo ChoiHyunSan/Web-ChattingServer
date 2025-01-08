@@ -126,3 +126,15 @@ replay_pid*
 # Operating System
 .DS_Store
 Thumbs.db
+
+# Application properties
+src/main/resources/application.properties
+src/main/resources/application.yml
+src/main/resources/application-*.properties
+src/main/resources/application-*.yml
+
+# Test properties
+src/test/resources/application.properties
+src/test/resources/application.yml
+src/test/resources/application-*.properties
+src/test/resources/application-*.yml
