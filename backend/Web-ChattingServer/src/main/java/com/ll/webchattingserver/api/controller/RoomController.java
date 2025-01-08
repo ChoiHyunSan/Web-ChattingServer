@@ -40,8 +40,8 @@ public class RoomController {
             @RequestBody @Valid RoomCreateRequest request,
             @AuthenticationPrincipal UserPrincipal principal){
         log.info("create: {}", request);
-        log.info("principal: {}", principal.getName());
-        return Result.success(roomService.create(principal.getName(), request.getRoomName()));
+        log.info("principal: {}", principal.getUsername());
+        return Result.success(roomService.create(principal.getUsername(), request.getRoomName()));
     }
 
     @Operation(
@@ -75,6 +75,7 @@ public class RoomController {
     public Result<List<RoomRedisDto>> getList(
             @AuthenticationPrincipal UserPrincipal principal
     ){
+        log.info("User Id: {}, Name : {}", principal.getId(), principal.getUsername());
         return Result.success(roomService.getMyList(principal.getId()));
     }
 
@@ -87,7 +88,8 @@ public class RoomController {
             @PathVariable("roomId") UUID roomId,
             @AuthenticationPrincipal UserPrincipal principal
     ) {
-        return Result.success(roomService.join(principal.getName(), roomId));
+        log.info("User Id: {}, Name : {}", principal.getId(), principal.getUsername());
+        return Result.success(roomService.join(principal.getUsername(), roomId));
     }
 
     @Operation(

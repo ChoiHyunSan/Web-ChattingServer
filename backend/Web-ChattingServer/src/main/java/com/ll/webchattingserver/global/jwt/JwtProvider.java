@@ -10,9 +10,12 @@ import io.jsonwebtoken.security.Keys;
 import io.lettuce.core.resource.ClientResources;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
+import java.util.Collections;
 import java.util.Date;
 
 @Component
@@ -39,19 +42,35 @@ public class JwtProvider {
         this.refreshSecretKey = Keys.hmacShaKeyFor(refreshSecretKeyStr.getBytes());
     }
 
-    public String getUsername(String token) {
+    public String getUsernameByAccessToken(String token) {
+        return getUsername(token, secretKey);
+    }
+
+    public String getUsernameByRefreshToken(String token) {
+        return getUsername(token, refreshSecretKey);
+    }
+
+    public Long getUserIdByAccessToken(String token) {
+        return getUserId(token, secretKey);
+    }
+
+    public Long getUserIdByRefreshToken(String token) {
+        return getUserId(token, refreshSecretKey);
+    }
+
+    private Long getUserId(String token, Key key) {
         try {
-            Claims claims = getClaims(token, secretKey);
-            return claims.get("username", String.class);
+            Claims claims = getClaims(token, key);
+            return claims.get("id", Long.class);
         } catch (JwtException | IllegalArgumentException e) {
             return null;
         }
     }
 
-    public Long getUserId(String token) {
+    private String getUsername(String token, Key key){
         try {
-            Claims claims = getClaims(token, secretKey);
-            return claims.get("id", Long.class);
+            Claims claims = getClaims(token, key);
+            return claims.get("username", String.class);
         } catch (JwtException | IllegalArgumentException e) {
             return null;
         }
@@ -82,7 +101,7 @@ public class JwtProvider {
     }
 
     public String createToken(String username, Long userId, Key key, long expireTime) {
-        Claims claims = Jwts.claims().setSubject(username);
+        Claims claims = Jwts.claims();
         claims.put("username", username);
         claims.put("id", userId);
 
@@ -97,15 +116,19 @@ public class JwtProvider {
                 .compact();
     }
 
-    public void validateToken(String token) {
-        parseToken(token, secretKey);
+    public boolean validateToken(String token) {
+        try {
+            return parseToken(token, secretKey);
+        } catch (JwtException e) {
+            throw new InvalidTokenAccessException();
+        }
     }
 
     public void validateRefreshToken(String token) {
         parseToken(token, refreshSecretKey);
     }
 
-    public boolean parseToken(String token, Key key) {
+    private boolean parseToken(String token, Key key) {
         try {
             Jwts.parserBuilder()
                     .setSigningKey(key)
@@ -133,5 +156,14 @@ public class JwtProvider {
             return bearerToken.substring(7);
         }
         return null;
+    }
+
+    public Authentication getAuthentication(String token) {
+        UserPrincipal principal = getUserPrincipal(token);
+        return new UsernamePasswordAuthenticationToken(
+                principal,
+                null,
+                Collections.emptyList()
+        );
     }
 }

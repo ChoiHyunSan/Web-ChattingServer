@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { debounce } from 'lodash';
 import { 
   Container, 
   List, 
@@ -25,6 +26,7 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import { useAuth } from '../contexts/AuthContext';
 import { useError } from '../hooks/useError';
 import AlertSnackbar from '../components/AlertSnackbar';
+import axios from '../api/axios';
 
 const LoadingSpinner = () => (
   <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -36,119 +38,65 @@ function RoomList() {
   const navigate = useNavigate();
   const { logout, user } = useAuth();
   const { error, handleError, setError } = useError();
-  const [loading, setLoading] = useState(false);
   const [rooms, setRooms] = useState([]);
   const [myRooms, setMyRooms] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [open, setOpen] = useState(false);
   const [newRoomName, setNewRoomName] = useState('');
   const [tabValue, setTabValue] = useState(0);
+  const [errorCount, setErrorCount] = useState(0);
 
-  const fetchRooms = useCallback(async () => {
+  const fetchData = useCallback(async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        console.error('토큰이 없습니다');
-        navigate('/login');
+      if (errorCount > 3) {
+        console.log('Too many errors, stopping requests');
         return;
       }
 
-      const headers = new Headers({
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      });
-
-      const response = await fetch('http://localhost:8080/api/room/list', { 
-        method: 'GET',
-        headers: headers,
-        mode: 'cors',
-        credentials: 'include'
-      });
+      setLoading(true);
+      const roomsResponse = await axios.get('/api/room/list');
+      const myRoomsResponse = await axios.get('/api/room/myList');
       
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const responseData = await response.json();
-      console.log('Rooms response:', responseData);
-      
-      // data 필드에서 배열 추출
-      const rooms = responseData.data || [];
-      setRooms(Array.isArray(rooms) ? rooms : []);
-
+      setRooms(roomsResponse.data.data || []);
+      setMyRooms(myRoomsResponse.data.data || []);
+      setErrorCount(0);
     } catch (error) {
-      console.error('Fetch error:', error);
       handleError(error);
+      setErrorCount(prev => prev + 1);
+    } finally {
+      setLoading(false);
     }
-  }, [handleError, navigate]);
+  }, [handleError, errorCount]);
 
-  const fetchMyRooms = useCallback(async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        console.error('토큰이 없습니다');
-        navigate('/login');
-        return;
-      }
-
-      const headers = new Headers({
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      });
-
-      const response = await fetch('http://localhost:8080/api/room/myList', { 
-        method: 'GET',
-        headers: headers,
-        mode: 'cors',
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const responseData = await response.json();
-      console.log('MyRooms response:', responseData);
-      
-      // data 필드에서 배열 추출
-      const myRooms = responseData.data || [];
-      setMyRooms(Array.isArray(myRooms) ? myRooms : []);
-
-    } catch (error) {
-      console.error('Fetch error:', error);
-      handleError(error);
-    }
-  }, [handleError, navigate]);
+  const debouncedFetchData = useCallback(
+    debounce(() => {
+      fetchData();
+    }, 1000),
+    [fetchData]
+  );
 
   useEffect(() => {
-    Promise.all([fetchRooms(), fetchMyRooms()]).catch(error => {
-      console.error('Error fetching data:', error);
-    });
-  }, [fetchRooms, fetchMyRooms]);
+    fetchData();
+  }, [fetchData]);
 
   const handleRefresh = useCallback(async () => {
-    await Promise.all([fetchRooms(), fetchMyRooms()]);
-  }, [fetchRooms, fetchMyRooms]);
-
-  useEffect(() => {
-    handleRefresh();
-  }, [handleRefresh]);
+    try {
+      setRefreshing(true);
+      setErrorCount(0);
+      await fetchData();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [fetchData]);
 
   const handleCreateRoom = async () => {
     try {
       setLoading(true);
-      await fetch('http://localhost:8080/api/room', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ roomName: newRoomName })
-      });
+      await axios.post('/api/room/create', { roomName: newRoomName });
       setOpen(false);
       setNewRoomName('');
-      await Promise.all([fetchRooms(), fetchMyRooms()]);
+      await fetchData();
     } catch (error) {
       handleError(error);
     } finally {
@@ -160,12 +108,7 @@ function RoomList() {
     try {
       setLoading(true);
       if (!isMyRoom) {
-        await fetch(`http://localhost:8080/api/room/${roomId}/join`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
+        await axios.post(`/api/room/${roomId}/join`);
       }
       navigate(`/room/${roomId}`);
     } catch (error) {
@@ -203,10 +146,10 @@ function RoomList() {
             </Tabs>
             <IconButton 
               onClick={handleRefresh} 
-              disabled={loading}
+              disabled={loading || refreshing}
               sx={{ ml: 'auto' }}
             >
-              <RefreshIcon />
+              {refreshing ? <CircularProgress size={24} /> : <RefreshIcon />}
             </IconButton>
           </Box>
 
@@ -241,7 +184,7 @@ function RoomList() {
                 ))
               ) : (
                 <Typography color="text.secondary" sx={{ mt: 2, textAlign: 'center' }}>
-                  참여 중인 채팅방이 없습니다.
+                  {error ? '데이터를 불러오는데 실패했습니다.' : '참여 중인 채팅방이 없습니다.'}
                 </Typography>
               )}
             </List>
@@ -270,7 +213,7 @@ function RoomList() {
                 ))
               ) : (
                 <Typography color="text.secondary" sx={{ mt: 2, textAlign: 'center' }}>
-                  생성된 채팅방이 없습니다.
+                  {error ? '데이터를 불러오는데 실패했습니다.' : '생성된 채팅방이 없습니다.'}
                 </Typography>
               )}
             </List>

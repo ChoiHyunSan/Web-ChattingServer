@@ -30,20 +30,36 @@ public class JwtAuthenticationInterceptor implements ChannelInterceptor {
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
-
+        log.info("Command: {}", accessor.getCommand()); // 로그 추가
         switch (accessor.getCommand()) {
             case CONNECT -> {
-                String token = extractToken(accessor);
-                jwtProvider.validateToken(token);
-                if (token != null) {
-                    String username = jwtProvider.getUsername(token);
-                    if(username != null) {
-                        accessor.setUser(() -> username);
+                try {
+                    String token = extractToken(accessor);
+                    log.info("Extracted token: {}", token); // 토큰 로그
+
+                    if (token == null) {
+                        log.error("Token is null");
+                        throw new MessageDeliveryException("Token is required");
                     }
+
+                    // 토큰 유효성 검사
+                    if (!jwtProvider.validateToken(token)) {
+                        log.error("Invalid token");
+                        throw new MessageDeliveryException("Invalid token");
+                    }
+
+                    String username = jwtProvider.getUsernameByAccessToken(token);
+                    if (username == null) {
+                        log.error("Username not found in token");
+                        throw new MessageDeliveryException("Username not found in token");
+                    }
+
+                    accessor.setUser(() -> username);
                     userRooms.putIfAbsent(username, ConcurrentHashMap.newKeySet());
-                    log.info("User connected and initialized: {}", username);
-                } else {
-                    throw new MessageDeliveryException("Invalid token");
+                    log.info("User connected successfully: {}", username);
+                } catch (Exception e) {
+                    log.error("WebSocket connection error: ", e);
+                    throw new MessageDeliveryException("Authentication failed: " + e.getMessage());
                 }
             }
             case SUBSCRIBE -> {

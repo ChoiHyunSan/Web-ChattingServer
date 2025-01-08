@@ -11,11 +11,14 @@ import com.ll.webchattingserver.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+@Slf4j
 @Tag(name = "AUTH API", description = "Auth API")
 @RestController
 @RequiredArgsConstructor
@@ -38,9 +41,12 @@ public class AuthController {
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
 
         CustomUserDetails userDetails = (CustomUserDetails) authenticate.getPrincipal();
+        String newAccessToken = jwtProvider.createAccessToken(userDetails.getUsername(), userDetails.getId());
+        String newRefreshToken = jwtProvider.createRefreshToken(userDetails.getUsername(), userDetails.getId());
+
         return Result.success(TokenResponse.of(
-                jwtProvider.createAccessToken(userDetails.getUsername(), userDetails.getId()),
-                jwtProvider.createRefreshToken(userDetails.getUsername(), userDetails.getId()),
+                newAccessToken,
+                newRefreshToken,
                 request.getUsername()));
     }
 
@@ -55,12 +61,22 @@ public class AuthController {
         String extractToken = jwtProvider.extractToken(token);
         jwtProvider.validateRefreshToken(extractToken);
 
-        String username = jwtProvider.getUsername(extractToken);
-        Long userId = jwtProvider.getUserId(extractToken);
+        String username = jwtProvider.getUsernameByRefreshToken(extractToken);
+        Long userId = jwtProvider.getUserIdByRefreshToken(extractToken);
+        log.info("Username: {}, UserId: {}", username, userId);
+
+        String newAccessToken = jwtProvider.createAccessToken(username, userId);
+        String newRefreshToken = jwtProvider.createRefreshToken(username, userId);
+
+        // SecurityContext 갱신
+        Authentication authentication = jwtProvider.getAuthentication(newAccessToken);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        log.info("Refresh! New Access Token: {}, New Refresh Token: {}", newAccessToken, newRefreshToken);
 
         return Result.success(TokenResponse.of(
-                jwtProvider.createAccessToken(username, userId),
-                jwtProvider.createRefreshToken(username, userId),
+                newAccessToken,
+                newRefreshToken,
                 username));
     }
 
