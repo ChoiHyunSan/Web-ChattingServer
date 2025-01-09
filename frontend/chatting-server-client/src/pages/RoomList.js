@@ -93,7 +93,7 @@ function RoomList() {
   const handleCreateRoom = async () => {
     try {
       setLoading(true);
-      await axios.post('/api/room/create', { roomName: newRoomName });
+      await axios.post('/api/room', { roomName: newRoomName });
       setOpen(false);
       setNewRoomName('');
       await fetchData();

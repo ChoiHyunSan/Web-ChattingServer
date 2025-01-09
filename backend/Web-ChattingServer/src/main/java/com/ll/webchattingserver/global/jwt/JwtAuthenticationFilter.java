@@ -34,6 +34,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // 인증이 필요없는 엔드포인트들은 필터 검증에서 제외
         if (request.getRequestURI().equals("/api/auth/refresh") ||
                 request.getRequestURI().equals("/api/auth/login") ||
+                request.getRequestURI().equals("/api/auth/signup") ||
                 request.getRequestURI().equals("/ws-stomp")) {  // WebSocket 엔드포인트 추가) {  // 로그인 API 추가
             filterChain.doFilter(request, response);
             return;
@@ -48,7 +49,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             response.getWriter().write("{\"error\": \"토큰이 없습니다.\"}");
             return;
         }
-
         try {
             jwtProvider.validateToken(token);
             Authentication auth = getRefreshAuthentication(token);
