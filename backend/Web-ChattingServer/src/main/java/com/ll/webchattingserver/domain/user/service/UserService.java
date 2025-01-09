@@ -25,7 +25,7 @@ public class UserService {
     public SignupResponse signUp(String username, String email, String password, String passwordCheck) {
         checkInvalidSignupInput(username, email, password, passwordCheck);
 
-        User user = userRepository.save(User.of(username, passwordEncoder.encode(password), email));
+        User user = userRepository.save(User.of(username, passwordEncoder.encode(password), email, "ROLE_USER"));
         return SignupResponse.of(user.getUsername(), user.getEmail());
     }
 
@@ -53,5 +53,13 @@ public class UserService {
 
     public boolean checkInvalidUser(String username) {
         return userRepository.findByUsername(username).isPresent();
+    }
+
+    public boolean existsByUsername(String username) {
+        return userRepository.findByUsername(username).isPresent();
+    }
+
+    public void save(User user) {
+        userRepository.save(user);
     }
 }

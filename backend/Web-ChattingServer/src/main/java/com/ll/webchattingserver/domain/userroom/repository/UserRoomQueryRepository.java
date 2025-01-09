@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import static com.ll.webchattingserver.domain.username.QUserRoom.userRoom;
+import static com.ll.webchattingserver.domain.userroom.QUserRoom.userRoom;
 
 @Repository
 @RequiredArgsConstructor

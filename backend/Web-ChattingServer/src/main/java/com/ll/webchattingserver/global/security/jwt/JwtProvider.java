@@ -84,20 +84,20 @@ public class JwtProvider {
                 .getBody();
     }
 
-    public String createRefreshToken(User user) {
-        return createToken(user.getUsername(), user.getId(), refreshSecretKey, refreshTokenTimeForMinute);
-    }
-
     public String createRefreshToken(String username, Long userId) {
-        return createToken(username, userId, refreshSecretKey, refreshTokenTimeForMinute);
-    }
-
-    public String createAccessToken(User user) {
-        return createToken(user.getUsername(), user.getId(), secretKey, tokenTimeForMinute);
+        return createToken(
+                username,
+                userId,
+                refreshSecretKey,
+                refreshTokenTimeForMinute);
     }
 
     public String createAccessToken(String username, Long userId) {
-        return createToken(username, userId, secretKey, tokenTimeForMinute);
+        return createToken(
+                username,
+                userId,
+                secretKey,
+                tokenTimeForMinute);
     }
 
     public String createToken(String username, Long userId, Key key, long expireTime) {
@@ -148,7 +148,10 @@ public class JwtProvider {
 
     public UserPrincipal getUserPrincipal(String token) {
         Claims claims = getClaims(token, secretKey);
-        return new UserPrincipal(claims.get("id", Long.class), claims.get("username", String.class));
+        return new UserPrincipal(
+                claims.get("id", Long.class),
+                claims.get("username", String.class)
+        );
     }
 
     public String extractToken(String bearerToken) {

@@ -34,7 +34,8 @@ public class JwtAuthenticationInterceptor implements ChannelInterceptor {
         switch (accessor.getCommand()) {
             case CONNECT -> {
                 try {
-                    String token = extractToken(accessor);
+                    String bearerToken = accessor.getFirstNativeHeader("Authorization");
+                    String token = jwtProvider.extractToken(bearerToken);
                     log.info("Extracted token: {}", token); // 토큰 로그
 
                     if (token == null) {
@@ -122,13 +123,5 @@ public class JwtAuthenticationInterceptor implements ChannelInterceptor {
         }
 
         throw new IllegalArgumentException("Invalid destination pattern: " + destination);
-    }
-
-    private String extractToken(StompHeaderAccessor accessor) {
-        String bearerToken = accessor.getFirstNativeHeader("Authorization");
-        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
-        }
-        return null;
     }
 }

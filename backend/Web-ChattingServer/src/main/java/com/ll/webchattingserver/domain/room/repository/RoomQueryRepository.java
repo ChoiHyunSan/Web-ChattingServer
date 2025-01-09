@@ -12,7 +12,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
-import static com.ll.webchattingserver.domain.username.QUserRoom.userRoom;
+import static com.ll.webchattingserver.domain.userroom.QUserRoom.userRoom;
 import static com.ll.webchattingserver.domain.room.QRoom.room;
 
 @Repository
