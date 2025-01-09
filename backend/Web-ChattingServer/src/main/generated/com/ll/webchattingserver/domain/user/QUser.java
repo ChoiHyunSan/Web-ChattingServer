@@ -2,7 +2,6 @@ package com.ll.webchattingserver.domain.user;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
-import com.ll.webchattingserver.domain.userroom.UserRoom;
 import com.querydsl.core.types.dsl.*;
 
 import com.querydsl.core.types.PathMetadata;
@@ -29,9 +28,11 @@ public class QUser extends EntityPathBase<User> {
 
     public final StringPath password = createString("password");
 
+    public final EnumPath<UserRole> role = createEnum("role", UserRole.class);
+
     public final StringPath username = createString("username");
 
-    public final SetPath<UserRoom, com.ll.webchattingserver.domain.username.QUserRoom> userRooms = this.<UserRoom, com.ll.webchattingserver.domain.username.QUserRoom>createSet("userRooms", UserRoom.class, com.ll.webchattingserver.domain.username.QUserRoom.class, PathInits.DIRECT2);
+    public final SetPath<com.ll.webchattingserver.domain.userroom.UserRoom, com.ll.webchattingserver.domain.userroom.QUserRoom> userRooms = this.<com.ll.webchattingserver.domain.userroom.UserRoom, com.ll.webchattingserver.domain.userroom.QUserRoom>createSet("userRooms", com.ll.webchattingserver.domain.userroom.UserRoom.class, com.ll.webchattingserver.domain.userroom.QUserRoom.class, PathInits.DIRECT2);
 
     public QUser(String variable) {
         super(User.class, forVariable(variable));

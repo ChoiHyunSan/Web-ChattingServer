@@ -43,11 +43,15 @@ public class User {
     @OneToMany(mappedBy = "user")
     private Set<UserRoom> userRooms = new HashSet<>();
 
-    public static User of(String username, String password, String email) {
+    @Enumerated(EnumType.STRING)
+    private UserRole role;
+
+    public static User of(String username, String password, String email, String role) {
         return User.builder()
                 .username(username)
                 .password(password)
                 .email(email)
+                .role(UserRole.valueOf(role))
                 .build();
     }
 }

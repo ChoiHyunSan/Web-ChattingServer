@@ -1,4 +1,4 @@
-package com.ll.webchattingserver.global.config;
+package com.ll.webchattingserver.global.config.db;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
