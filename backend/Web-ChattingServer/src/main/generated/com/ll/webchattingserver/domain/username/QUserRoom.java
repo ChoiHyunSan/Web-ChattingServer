@@ -2,6 +2,7 @@ package com.ll.webchattingserver.domain.username;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
+import com.ll.webchattingserver.domain.userroom.UserRoom;
 import com.querydsl.core.types.dsl.*;
 
 import com.querydsl.core.types.PathMetadata;

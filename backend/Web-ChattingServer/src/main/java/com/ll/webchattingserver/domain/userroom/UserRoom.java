@@ -1,4 +1,4 @@
-package com.ll.webchattingserver.domain.username;
+package com.ll.webchattingserver.domain.userroom;
 
 import com.ll.webchattingserver.domain.room.Room;
 import com.ll.webchattingserver.domain.user.User;

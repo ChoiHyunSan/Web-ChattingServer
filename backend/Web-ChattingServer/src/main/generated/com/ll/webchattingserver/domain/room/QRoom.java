@@ -2,6 +2,7 @@ package com.ll.webchattingserver.domain.room;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
+import com.ll.webchattingserver.domain.userroom.UserRoom;
 import com.querydsl.core.types.dsl.*;
 
 import com.querydsl.core.types.PathMetadata;
@@ -26,7 +27,7 @@ public class QRoom extends EntityPathBase<Room> {
 
     public final StringPath name = createString("name");
 
-    public final SetPath<com.ll.webchattingserver.domain.username.UserRoom, com.ll.webchattingserver.domain.username.QUserRoom> userRooms = this.<com.ll.webchattingserver.domain.username.UserRoom, com.ll.webchattingserver.domain.username.QUserRoom>createSet("userRooms", com.ll.webchattingserver.domain.username.UserRoom.class, com.ll.webchattingserver.domain.username.QUserRoom.class, PathInits.DIRECT2);
+    public final SetPath<UserRoom, com.ll.webchattingserver.domain.username.QUserRoom> userRooms = this.<UserRoom, com.ll.webchattingserver.domain.username.QUserRoom>createSet("userRooms", UserRoom.class, com.ll.webchattingserver.domain.username.QUserRoom.class, PathInits.DIRECT2);
 
     public QRoom(String variable) {
         super(Room.class, forVariable(variable));

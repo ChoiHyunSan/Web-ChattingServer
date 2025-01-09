@@ -1,5 +1,7 @@
-package com.ll.webchattingserver.domain.user;
+package com.ll.webchattingserver.domain.user.service;
 
+import com.ll.webchattingserver.domain.user.User;
+import com.ll.webchattingserver.domain.user.repository.UserRepository;
 import com.ll.webchattingserver.domain.user.dto.response.SignupResponse;
 import com.ll.webchattingserver.global.exception.clazz.service.DuplicateEmailException;
 import com.ll.webchattingserver.global.exception.clazz.service.DuplicateUsernameException;

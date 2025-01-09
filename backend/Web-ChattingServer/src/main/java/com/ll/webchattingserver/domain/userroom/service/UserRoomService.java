@@ -1,10 +1,10 @@
-package com.ll.webchattingserver.domain.username.service;
+package com.ll.webchattingserver.domain.userroom.service;
 
 import com.ll.webchattingserver.domain.room.Room;
 import com.ll.webchattingserver.domain.user.User;
-import com.ll.webchattingserver.domain.username.UserRoom;
-import com.ll.webchattingserver.domain.username.repository.UserRoomQueryRepository;
-import com.ll.webchattingserver.domain.username.repository.UserRoomRepository;
+import com.ll.webchattingserver.domain.userroom.UserRoom;
+import com.ll.webchattingserver.domain.userroom.repository.UserRoomQueryRepository;
+import com.ll.webchattingserver.domain.userroom.repository.UserRoomRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

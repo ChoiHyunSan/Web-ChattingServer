@@ -5,7 +5,7 @@ import com.ll.webchattingserver.domain.user.dto.request.LoginRequest;
 import com.ll.webchattingserver.domain.user.dto.request.SignupRequest;
 import com.ll.webchattingserver.domain.user.dto.response.SignupResponse;
 import com.ll.webchattingserver.domain.user.dto.response.TokenResponse;
-import com.ll.webchattingserver.domain.user.UserService;
+import com.ll.webchattingserver.domain.user.service.UserService;
 import com.ll.webchattingserver.global.security.jwt.JwtProvider;
 import com.ll.webchattingserver.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;

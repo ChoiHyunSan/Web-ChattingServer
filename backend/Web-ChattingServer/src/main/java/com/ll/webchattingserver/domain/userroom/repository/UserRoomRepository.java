@@ -1,8 +1,8 @@
-package com.ll.webchattingserver.domain.username.repository;
+package com.ll.webchattingserver.domain.userroom.repository;
 
 import com.ll.webchattingserver.domain.room.Room;
 import com.ll.webchattingserver.domain.user.User;
-import com.ll.webchattingserver.domain.username.UserRoom;
+import com.ll.webchattingserver.domain.userroom.UserRoom;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

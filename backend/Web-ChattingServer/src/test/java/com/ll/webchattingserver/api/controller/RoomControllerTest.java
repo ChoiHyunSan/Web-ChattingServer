@@ -6,7 +6,7 @@ import com.ll.webchattingserver.domain.room.dto.RoomRedisDto;
 import com.ll.webchattingserver.domain.room.Room;
 import com.ll.webchattingserver.domain.room.repository.RoomRepository;
 import com.ll.webchattingserver.domain.user.User;
-import com.ll.webchattingserver.domain.user.UserService;
+import com.ll.webchattingserver.domain.user.service.UserService;
 import com.ll.webchattingserver.room.RoomTestHelper;
 
 import jakarta.transaction.Transactional;
