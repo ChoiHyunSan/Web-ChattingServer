@@ -1,16 +1,11 @@
 package com.ll.webchattingserver.global.cache;
 
-import com.ll.webchattingserver.api.dto.redis.RoomRedisDto;
+import com.ll.webchattingserver.domain.room.dto.RoomRedisDto;
 import com.ll.webchattingserver.domain.room.Room;
 import com.ll.webchattingserver.domain.user.User;
-import com.ll.webchattingserver.global.exception.LogicErrorException;
-import io.lettuce.core.RedisConnectionException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataAccessException;
-import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.stereotype.Service;
 
 import java.util.*;

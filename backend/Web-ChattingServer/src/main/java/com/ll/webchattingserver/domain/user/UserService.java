@@ -1,10 +1,10 @@
 package com.ll.webchattingserver.domain.user;
 
-import com.ll.webchattingserver.api.dto.response.auth.SignupResponse;
-import com.ll.webchattingserver.global.exception.DuplicateEmailException;
-import com.ll.webchattingserver.global.exception.DuplicateUsernameException;
-import com.ll.webchattingserver.global.exception.PasswordMismatchException;
-import com.ll.webchattingserver.global.exception.ResourceNotFoundException;
+import com.ll.webchattingserver.domain.user.dto.response.SignupResponse;
+import com.ll.webchattingserver.global.exception.clazz.service.DuplicateEmailException;
+import com.ll.webchattingserver.global.exception.clazz.service.DuplicateUsernameException;
+import com.ll.webchattingserver.global.exception.clazz.service.PasswordMismatchException;
+import com.ll.webchattingserver.global.exception.clazz.service.ResourceNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;

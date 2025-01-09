@@ -1,11 +1,11 @@
 package com.ll.webchattingserver.api.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ll.webchattingserver.api.dto.request.auth.LoginRequest;
-import com.ll.webchattingserver.api.dto.request.auth.SignupRequest;
-import com.ll.webchattingserver.global.exception.DuplicateEmailException;
-import com.ll.webchattingserver.global.exception.DuplicateUsernameException;
-import com.ll.webchattingserver.global.exception.PasswordMismatchException;
+import com.ll.webchattingserver.domain.user.dto.request.LoginRequest;
+import com.ll.webchattingserver.domain.user.dto.request.SignupRequest;
+import com.ll.webchattingserver.global.exception.clazz.service.DuplicateEmailException;
+import com.ll.webchattingserver.global.exception.clazz.service.DuplicateUsernameException;
+import com.ll.webchattingserver.global.exception.clazz.service.PasswordMismatchException;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -130,7 +130,7 @@ class AuthControllerTest {
             mockMvc.perform(post(LOGIN_URL)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(loginRequest)))
-                    .andExpect(status().isBadRequest())
+                    .andExpect(status().isUnauthorized())
                     .andExpect(jsonPath("$.message").value("로그인 정보가 올바르지 않습니다."));
         }
     }

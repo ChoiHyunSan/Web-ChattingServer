@@ -1,6 +1,6 @@
 package com.ll.webchattingserver.domain.user;
 
-import com.ll.webchattingserver.domain.intermediate.UserRoom;
+import com.ll.webchattingserver.domain.username.UserRoom;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;

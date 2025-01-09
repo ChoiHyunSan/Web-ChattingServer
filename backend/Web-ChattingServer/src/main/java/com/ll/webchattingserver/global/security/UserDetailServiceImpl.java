@@ -2,7 +2,6 @@ package com.ll.webchattingserver.global.security;
 
 import com.ll.webchattingserver.domain.user.User;
 import com.ll.webchattingserver.domain.user.UserRepository;
-import com.ll.webchattingserver.global.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
