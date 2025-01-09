@@ -22,11 +22,12 @@ public class CustomUserDetails implements UserDetails {
     private final Long id;
     private final String username;
     private final String password;
+    private final String role;
     private final Collection<? extends GrantedAuthority> authorities;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singleton(new SimpleGrantedAuthority("ROLE_USER"));
+        return Collections.singleton(new SimpleGrantedAuthority(role));
     }
 
     @Override
@@ -37,10 +38,6 @@ public class CustomUserDetails implements UserDetails {
     @Override
     public String getUsername() {
         return username;
-    }
-
-    public Collection<? extends GrantedAuthority> getRoles() {
-        return authorities;
     }
 
     @Override

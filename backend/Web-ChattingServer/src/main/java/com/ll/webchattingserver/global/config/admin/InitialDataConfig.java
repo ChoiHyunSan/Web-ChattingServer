@@ -35,7 +35,7 @@ public class InitialDataConfig {
                 String password = passwordEncoder.encode(adminPassword);
                 User admin = User.builder()
                         .username(adminUsername)
-                        .password(adminPassword)
+                        .password(password)
                         .email(adminEmail)
                         .role(UserRole.ROLE_ADMIN)
                         .build();

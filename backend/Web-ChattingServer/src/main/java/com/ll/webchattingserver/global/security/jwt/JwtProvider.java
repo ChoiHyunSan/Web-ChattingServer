@@ -2,6 +2,7 @@ package com.ll.webchattingserver.global.security.jwt;
 
 import com.ll.webchattingserver.domain.user.User;
 import com.ll.webchattingserver.global.exception.clazz.security.InvalidTokenAccessException;
+import com.ll.webchattingserver.global.security.CustomUserDetails;
 import com.ll.webchattingserver.global.security.UserPrincipal;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -9,6 +10,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import io.lettuce.core.resource.ClientResources;
 import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -18,6 +20,7 @@ import java.security.Key;
 import java.util.Collections;
 import java.util.Date;
 
+@Slf4j
 @Component
 public class JwtProvider {
 
@@ -50,6 +53,10 @@ public class JwtProvider {
         return getUsername(token, refreshSecretKey);
     }
 
+    public String getRoleByRefreshToken(String token) {
+        return getRole(token, refreshSecretKey);
+    }
+
     public Long getUserIdByAccessToken(String token) {
         return getUserId(token, secretKey);
     }
@@ -62,6 +69,15 @@ public class JwtProvider {
         try {
             Claims claims = getClaims(token, key);
             return claims.get("id", Long.class);
+        } catch (JwtException | IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    private String getRole(String token, Key key) {
+        try {
+            Claims claims = getClaims(token, key);
+            return claims.get("role", String.class);
         } catch (JwtException | IllegalArgumentException e) {
             return null;
         }
@@ -84,29 +100,52 @@ public class JwtProvider {
                 .getBody();
     }
 
-    public String createRefreshToken(String username, Long userId) {
+    public String createRefreshToken(CustomUserDetails userDetails) {
         return createToken(
-                username,
-                userId,
+                userDetails.getUsername(),
+                userDetails.getId(),
+                userDetails.getRole(),
                 refreshSecretKey,
                 refreshTokenTimeForMinute);
     }
 
-    public String createAccessToken(String username, Long userId) {
+    public String createAccessToken(CustomUserDetails userDetails) {
         return createToken(
-                username,
-                userId,
+                userDetails.getUsername(),
+                userDetails.getId(),
+                userDetails.getRole(),
                 secretKey,
                 tokenTimeForMinute);
     }
 
-    public String createToken(String username, Long userId, Key key, long expireTime) {
+    public String createRefreshToken(String username, Long id, String role) {
+        return createToken(
+                username,
+                id,
+                role,
+                refreshSecretKey,
+                refreshTokenTimeForMinute);
+    }
+
+    public String createAccessToken(String username, Long id, String role) {
+        return createToken(
+                username,
+                id,
+                role,
+                secretKey,
+                tokenTimeForMinute);
+    }
+
+    public String createToken(String username, Long userId, String role, Key key, long expireTime) {
         Claims claims = Jwts.claims();
         claims.put("username", username);
         claims.put("id", userId);
+        claims.put("role", role);
 
         Date now = new Date();
         Date validity = new Date(now.getTime() + expireTime);
+
+        log.info("Create Token! Username: {}, Id: {}, Role: {}, Date: {}", username, userId, role, validity);
 
         return Jwts.builder()
                 .setClaims(claims)
