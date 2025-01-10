@@ -1,4 +1,4 @@
-package com.ll.webchattingserver.global.security.jwt;
+package com.ll.webchattingserver.global.security.jwt.authenticate;
 
 import com.ll.webchattingserver.global.exception.clazz.security.InvalidTokenAccessException;
 import jakarta.servlet.FilterChain;
@@ -26,8 +26,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return path.startsWith("/swagger-ui/") ||
                 path.startsWith("/v3/api-docs/") ||
                 path.startsWith("/api/auth/") ||
-                path.startsWith("/ws-stomp/") ||
-                path.startsWith("/ws/");
+                path.startsWith("/ws-stomp") ||
+                path.startsWith("/ws");
     }
 
     @Override
