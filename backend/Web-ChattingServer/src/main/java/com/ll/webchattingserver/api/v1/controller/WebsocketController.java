@@ -1,4 +1,4 @@
-package com.ll.webchattingserver.api.v1;
+package com.ll.webchattingserver.api.v1.controller;
 
 import com.ll.webchattingserver.core.domain.chat.dto.request.Message;
 import com.ll.webchattingserver.core.domain.chat.service.ChatService;

@@ -22,6 +22,7 @@ public class WssAccessorManager {
 
     public void checkMessageCommand(Message<?> message){
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
+        log.info("Command: {}", accessor.getCommand());
         if(accessor.getCommand() == StompCommand.CONNECT){
             try {
                 String bearerToken = accessor.getFirstNativeHeader("Authorization");
@@ -31,6 +32,7 @@ public class WssAccessorManager {
                 log.error("WebSocket connection error: ", e);
                 throw new MessageDeliveryException("Authentication failed: " + e.getMessage());
             }
+            return;
         }
 
         webSocketAuthenticationService.validateAuthentication(accessor);

@@ -1,5 +1,6 @@
-package com.ll.webchattingserver.api.v1;
+package com.ll.webchattingserver.api.v1.controller;
 
+import com.ll.webchattingserver.api.v1.Result;
 import com.ll.webchattingserver.core.domain.notice.dto.request.NoticeCreateRequest;
 import com.ll.webchattingserver.core.domain.notice.dto.response.NoticeCreateResponse;
 import com.ll.webchattingserver.core.domain.notice.dto.response.NoticeResponse;

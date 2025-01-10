@@ -1,5 +1,6 @@
-package com.ll.webchattingserver.api.v1;
+package com.ll.webchattingserver.api.v1.controller;
 
+import com.ll.webchattingserver.api.v1.Result;
 import com.ll.webchattingserver.core.domain.user.dto.request.LoginRequest;
 import com.ll.webchattingserver.core.domain.user.dto.request.SignupRequest;
 import com.ll.webchattingserver.core.domain.user.dto.response.SignupResponse;

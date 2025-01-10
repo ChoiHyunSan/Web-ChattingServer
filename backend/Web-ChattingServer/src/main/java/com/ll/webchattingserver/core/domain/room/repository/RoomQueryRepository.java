@@ -13,8 +13,8 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
-import static com.ll.webchattingserver.domain.userroom.QUserRoom.userRoom;
-import static com.ll.webchattingserver.domain.room.QRoom.room;
+import static com.ll.webchattingserver.core.domain.userroom.QUserRoom.userRoom;
+import static com.ll.webchattingserver.core.domain.room.QRoom.room;
 
 @Repository
 @RequiredArgsConstructor
@@ -30,11 +30,11 @@ public class RoomQueryRepository {
                         room.id,
                         room.name,
                         room.createdAt,
-                        // room.userRooms.size()
-                        JPAExpressions
-                                .select(userRoom.count())
-                                .from(userRoom)
-                                .where(userRoom.room.eq(room))
+                        room.userRooms.size()
+//                        JPAExpressions
+//                                .select(userRoom.count())
+//                                .from(userRoom)
+//                                .where(userRoom.room.eq(room))
                 ))
                 .from(room)
                 .where(

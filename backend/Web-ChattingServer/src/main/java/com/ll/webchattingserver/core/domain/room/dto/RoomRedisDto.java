@@ -1,5 +1,6 @@
 package com.ll.webchattingserver.core.domain.room.dto;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.ll.webchattingserver.core.domain.room.Room;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;

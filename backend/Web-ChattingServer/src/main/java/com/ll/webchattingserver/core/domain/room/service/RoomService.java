@@ -32,7 +32,7 @@ public class RoomService {
     private final RoomQueryRepository roomQueryRepository;
 
     private final UserService userService;
-    private final RedisService redisService;
+    // private final RedisService redisService;
     private final UserRoomService userRoomService;
 
     @Transactional()
@@ -42,11 +42,11 @@ public class RoomService {
         Room room = createRoom(roomName);
         userRoomService.createUserRoom(user, room);
 
-        try {
-            redisService.createRoom(room, user);
-        } catch (Exception e) {
-            log.warn("Failed to cache new room: room={}, user={}", room.getId(), user.getId(), e);
-        }
+//        try {
+//            redisService.createRoom(room, user);
+//        } catch (Exception e) {
+//            log.warn("Failed to cache new room: room={}, user={}", room.getId(), user.getId(), e);
+//        }
 
         return RoomCreateResponse.of(room.getId().toString());
     }
@@ -56,10 +56,10 @@ public class RoomService {
     }
 
     public List<RoomRedisDto> getMyList(Long userId) {
-        Optional<List<RoomRedisDto>> userRooms = redisService.getUserRooms(userId);
-        if(userRooms.isPresent()) {
-            return userRooms.get();
-        }
+//        Optional<List<RoomRedisDto>> userRooms = redisService.getUserRooms(userId);
+//        if(userRooms.isPresent()) {
+//            return userRooms.get();
+//        }
 
         log.info("레디스가 비어있네요");
 
@@ -68,12 +68,12 @@ public class RoomService {
                 .map(RoomRedisDto::of)
                 .toList();
 
-        // 캐시 갱신
-        try {
-            redisService.cacheUserRooms(userId, roomDtos);
-        } catch (Exception e) {
-            log.warn("Failed to cache user rooms: user={}", userId, e);
-        }
+//        // 캐시 갱신
+//        try {
+//            redisService.cacheUserRooms(userId, roomDtos);
+//        } catch (Exception e) {
+//            log.warn("Failed to cache user rooms: user={}", userId, e);
+//        }
 
         return roomDtos;
     }
@@ -87,16 +87,16 @@ public class RoomService {
             userRoomService.createUserRoom(user, room);
         }
 
-        // Redis 캐시 갱신 시도
-        try {
-            // 방 정보가 캐시에 있다면 갱신
-            if (redisService.getRoom(roomId).isPresent()) {
-                redisService.setRoom(room);
-            }
-            redisService.joinRoom(user.getId(), roomId);
-        } catch (Exception e) {
-            log.warn("Failed to update Redis cache for room join: room={}, user={}", roomId, user.getId());
-        }
+//        // Redis 캐시 갱신 시도
+//        try {
+//            // 방 정보가 캐시에 있다면 갱신
+//            if (redisService.getRoom(roomId).isPresent()) {
+//                redisService.setRoom(room);
+//            }
+//            redisService.joinRoom(user.getId(), roomId);
+//        } catch (Exception e) {
+//            log.warn("Failed to update Redis cache for room join: room={}, user={}", roomId, user.getId());
+//        }
 
         return RoomJoinResponse.of(roomId.toString());
     }
@@ -110,23 +110,23 @@ public class RoomService {
             // UserRoom 데이터 삭제
             userRoomService.deleteUserRoom(roomId, userId);
 
-            // 방이 사라지는 경우 (= 자기 자신 밖에 방에 없는 경우)
-            if (userRooms.size() == 1) {
-                // 채팅방 삭제 + 레디스 방 정보 삭제
-                roomRepository.delete(room);
-                redisService.removeRoom(roomId);
-            } else {
-                // 방이 유지되는 경우 캐시 갱신
-                if (redisService.getRoom(roomId).isPresent()) {
-                    redisService.setRoom(room);
-                }
-            }
+//            // 방이 사라지는 경우 (= 자기 자신 밖에 방에 없는 경우)
+//            if (userRooms.size() == 1) {
+//                // 채팅방 삭제 + 레디스 방 정보 삭제
+//                roomRepository.delete(room);
+//                redisService.removeRoom(roomId);
+//            } else {
+//                // 방이 유지되는 경우 캐시 갱신
+//                if (redisService.getRoom(roomId).isPresent()) {
+//                    redisService.setRoom(room);
+//                }
+//            }
         } catch (Exception e) {
             log.warn("Failed to update Redis cache for room leave: room={}, user={}", roomId, userId);
         }
 
-        // 레디스 상에서 유저의 방 목록을 제거
-        redisService.leaveRoom(userId, roomId);
+//        // 레디스 상에서 유저의 방 목록을 제거
+//        redisService.leaveRoom(userId, roomId);
         return RoomLeaveResponse.of();
     }
 

@@ -1,5 +1,6 @@
-package com.ll.webchattingserver.api.v1;
+package com.ll.webchattingserver.api.v1.controller;
 
+import com.ll.webchattingserver.api.v1.Result;
 import com.ll.webchattingserver.core.domain.chat.dto.response.MessageResponse;
 import com.ll.webchattingserver.core.domain.chat.service.ChatService;
 import lombok.RequiredArgsConstructor;

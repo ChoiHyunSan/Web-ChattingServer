@@ -1,7 +1,7 @@
 package com.ll.webchattingserver.global.config;
 
-import com.ll.webchattingserver.global.security.jwt.JwtAuthenticationFilter;
-import com.ll.webchattingserver.global.security.jwt.JwtProvider;
+import com.ll.webchattingserver.global.security.jwt.authenticate.JwtAuthenticationFilter;
+import com.ll.webchattingserver.global.security.jwt.authenticate.JwtProvider;
 import com.ll.webchattingserver.global.security.UserDetailServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
