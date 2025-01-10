@@ -214,7 +214,8 @@ public class JwtProvider {
         Claims claims = getClaims(token, secretKey);
         return new UserPrincipal(
                 claims.get("id", Long.class),
-                claims.get("username", String.class)
+                claims.get("username", String.class),
+                claims.get("role", String.class)
         );
     }
 

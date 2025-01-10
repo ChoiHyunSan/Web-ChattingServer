@@ -2,6 +2,7 @@ package com.ll.webchattingserver.global.exception.handler;
 
 import com.ll.webchattingserver.api.Result;
 import com.ll.webchattingserver.global.exception.clazz.redis.LogicErrorException;
+import com.ll.webchattingserver.global.exception.clazz.service.NoAuthorizeException;
 import com.ll.webchattingserver.global.exception.clazz.service.UserSignupException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -28,6 +29,13 @@ public class ServiceExceptionHandler {
         }
 
         return Result.error(400, e.getMessage());
+    }
+
+    @ExceptionHandler({NoAuthorizeException.class})
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public Result<Void> handleNoAuthorizeException(RuntimeException e) {
+        log.error(e.getMessage());
+        return Result.error(403, e.getMessage());
     }
 
     @ExceptionHandler({LogicErrorException.class})

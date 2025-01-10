@@ -51,7 +51,9 @@ public class AuthController {
             description = "새로운 유저 생성"
     )
     @PostMapping("/signup")
-    public Result<SignupResponse> signup(@RequestBody SignupRequest request) {
+    public Result<SignupResponse> signup(
+            @RequestBody SignupRequest request
+    ) {
         SignupResponse response = userService.signUp(
                 request.getUsername(),
                 request.getEmail(),

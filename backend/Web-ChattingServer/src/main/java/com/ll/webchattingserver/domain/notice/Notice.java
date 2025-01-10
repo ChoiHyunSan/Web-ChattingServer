@@ -16,7 +16,7 @@ public class Notice extends BaseEntity {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "notice_id")
-    private int id;
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(updatable = false)
