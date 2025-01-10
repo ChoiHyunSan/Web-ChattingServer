@@ -9,6 +9,7 @@ import com.ll.webchattingserver.domain.user.service.AuthService;
 import com.ll.webchattingserver.domain.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -39,10 +40,10 @@ public class AuthController {
             description = "로그인을 진행합니다."
     )
     @PostMapping("/refresh")
-    public Result<TokenResponse> login(
-            @RequestHeader("Authorization") String token
+    public Result<TokenResponse> refresh(
+            HttpServletRequest request
     ) {
-        return Result.success(authService.refresh(token));
+        return Result.success(authService.refresh(request));
     }
 
     @Operation(

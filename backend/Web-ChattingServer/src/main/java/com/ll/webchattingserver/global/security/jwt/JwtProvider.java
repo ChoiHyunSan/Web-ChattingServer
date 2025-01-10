@@ -1,6 +1,5 @@
 package com.ll.webchattingserver.global.security.jwt;
 
-import com.ll.webchattingserver.domain.user.User;
 import com.ll.webchattingserver.global.exception.clazz.security.InvalidTokenAccessException;
 import com.ll.webchattingserver.global.security.CustomUserDetails;
 import com.ll.webchattingserver.global.security.UserPrincipal;
@@ -10,6 +9,8 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import io.lettuce.core.resource.ClientResources;
 import jakarta.annotation.PostConstruct;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -185,19 +186,36 @@ public class JwtProvider {
         this.clientResources = clientResources;
     }
 
+    public String extractTokenByHeader(String bearerToken) {
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
+        return null;
+    }
+
+    public String extractTokenByHeader(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
+
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("token".equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+        return null;
+    }
+
     public UserPrincipal getUserPrincipal(String token) {
         Claims claims = getClaims(token, secretKey);
         return new UserPrincipal(
                 claims.get("id", Long.class),
                 claims.get("username", String.class)
         );
-    }
-
-    public String extractToken(String bearerToken) {
-        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
-        }
-        return null;
     }
 
     public Authentication getAuthentication(String token) {

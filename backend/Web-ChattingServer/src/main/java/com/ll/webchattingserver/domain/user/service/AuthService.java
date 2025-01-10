@@ -4,6 +4,7 @@ import com.ll.webchattingserver.domain.user.dto.request.LoginRequest;
 import com.ll.webchattingserver.domain.user.dto.response.TokenResponse;
 import com.ll.webchattingserver.global.security.CustomUserDetails;
 import com.ll.webchattingserver.global.security.jwt.JwtProvider;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -34,8 +35,8 @@ public class AuthService {
                 request.getUsername());
     }
 
-    public TokenResponse refresh(String refreshToken) {
-        String extractToken = jwtProvider.extractToken(refreshToken);
+    public TokenResponse refresh(HttpServletRequest request) {
+        String extractToken = jwtProvider.extractTokenByHeader(request);
         jwtProvider.validateRefreshToken(extractToken);
 
         String username = jwtProvider.getUsernameByRefreshToken(extractToken);

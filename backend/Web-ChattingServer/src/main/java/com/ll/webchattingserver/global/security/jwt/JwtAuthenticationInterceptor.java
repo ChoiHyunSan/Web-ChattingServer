@@ -30,13 +30,13 @@ public class JwtAuthenticationInterceptor implements ChannelInterceptor {
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
-        log.info("Command: {}", accessor.getCommand()); // 로그 추가
+        log.info("Command: {}", accessor.getCommand());
         switch (accessor.getCommand()) {
             case CONNECT -> {
                 try {
                     String bearerToken = accessor.getFirstNativeHeader("Authorization");
-                    String token = jwtProvider.extractToken(bearerToken);
-                    log.info("Extracted token: {}", token); // 토큰 로그
+                    String token = jwtProvider.extractTokenByHeader(bearerToken);
+                    log.info("Extracted token: {}", token);
 
                     if (token == null) {
                         log.error("Token is null");
