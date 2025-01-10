@@ -1,7 +1,7 @@
 package com.ll.webchattingserver.global.cache;
 
-import com.ll.webchattingserver.domain.room.repository.RoomRepository;
-import com.ll.webchattingserver.domain.user.service.UserService;
+import com.ll.webchattingserver.core.domain.room.repository.RoomRepository;
+import com.ll.webchattingserver.core.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;

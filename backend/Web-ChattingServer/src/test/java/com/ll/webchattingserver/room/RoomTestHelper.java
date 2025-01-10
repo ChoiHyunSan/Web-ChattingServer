@@ -2,12 +2,12 @@ package com.ll.webchattingserver.room;
 
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ll.webchattingserver.api.Result;
-import com.ll.webchattingserver.domain.user.dto.request.LoginRequest;
-import com.ll.webchattingserver.domain.user.dto.request.SignupRequest;
-import com.ll.webchattingserver.domain.room.dto.request.RoomCreateRequest;
-import com.ll.webchattingserver.domain.user.dto.response.TokenResponse;
-import com.ll.webchattingserver.domain.room.dto.response.RoomCreateResponse;
+import com.ll.webchattingserver.api.v1.Result;
+import com.ll.webchattingserver.core.domain.user.dto.request.LoginRequest;
+import com.ll.webchattingserver.core.domain.user.dto.request.SignupRequest;
+import com.ll.webchattingserver.core.domain.room.dto.request.RoomCreateRequest;
+import com.ll.webchattingserver.core.domain.user.dto.response.TokenResponse;
+import com.ll.webchattingserver.core.domain.room.dto.response.RoomCreateResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;

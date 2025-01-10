@@ -1,6 +1,6 @@
 package com.ll.webchattingserver.global.exception.handler;
 
-import com.ll.webchattingserver.api.Result;
+import com.ll.webchattingserver.api.v1.Result;
 import com.ll.webchattingserver.global.exception.clazz.security.InvalidTokenAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.AuthenticationException;

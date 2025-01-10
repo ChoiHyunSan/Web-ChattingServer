@@ -1,8 +1,8 @@
 package com.ll.webchattingserver.global.config.admin;
 
-import com.ll.webchattingserver.domain.user.User;
-import com.ll.webchattingserver.domain.user.UserRole;
-import com.ll.webchattingserver.domain.user.service.UserService;
+import com.ll.webchattingserver.core.domain.user.User;
+import com.ll.webchattingserver.core.domain.user.UserRole;
+import com.ll.webchattingserver.core.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationRunner;

@@ -1,12 +1,12 @@
 package com.ll.webchattingserver.api.controller;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ll.webchattingserver.api.Result;
-import com.ll.webchattingserver.domain.room.dto.RoomRedisDto;
-import com.ll.webchattingserver.domain.room.Room;
-import com.ll.webchattingserver.domain.room.repository.RoomRepository;
-import com.ll.webchattingserver.domain.user.User;
-import com.ll.webchattingserver.domain.user.service.UserService;
+import com.ll.webchattingserver.api.v1.Result;
+import com.ll.webchattingserver.core.domain.room.dto.RoomRedisDto;
+import com.ll.webchattingserver.core.domain.room.Room;
+import com.ll.webchattingserver.core.domain.room.repository.RoomRepository;
+import com.ll.webchattingserver.core.domain.user.User;
+import com.ll.webchattingserver.core.domain.user.service.UserService;
 import com.ll.webchattingserver.room.RoomTestHelper;
 
 import jakarta.transaction.Transactional;

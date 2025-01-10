@@ -1,6 +1,5 @@
 package com.ll.webchattingserver.global.security;
 
-import com.ll.webchattingserver.domain.user.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -10,7 +9,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 
 
 @Getter
