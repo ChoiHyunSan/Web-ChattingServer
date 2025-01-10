@@ -20,11 +20,17 @@ public class QRoom extends EntityPathBase<Room> {
 
     public static final QRoom room = new QRoom("room");
 
-    public final DateTimePath<java.time.LocalDateTime> createdAt = createDateTime("createdAt", java.time.LocalDateTime.class);
+    public final com.ll.webchattingserver.global.QBaseEntity _super = new com.ll.webchattingserver.global.QBaseEntity(this);
+
+    //inherited
+    public final DateTimePath<java.time.LocalDateTime> createdAt = _super.createdAt;
 
     public final ComparablePath<java.util.UUID> id = createComparable("id", java.util.UUID.class);
 
     public final StringPath name = createString("name");
+
+    //inherited
+    public final DateTimePath<java.time.LocalDateTime> updatedAt = _super.updatedAt;
 
     public final SetPath<com.ll.webchattingserver.domain.userroom.UserRoom, com.ll.webchattingserver.domain.userroom.QUserRoom> userRooms = this.<com.ll.webchattingserver.domain.userroom.UserRoom, com.ll.webchattingserver.domain.userroom.QUserRoom>createSet("userRooms", com.ll.webchattingserver.domain.userroom.UserRoom.class, com.ll.webchattingserver.domain.userroom.QUserRoom.class, PathInits.DIRECT2);
 

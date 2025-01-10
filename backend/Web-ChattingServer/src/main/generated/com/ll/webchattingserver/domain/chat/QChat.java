@@ -19,7 +19,12 @@ public class QChat extends EntityPathBase<Chat> {
 
     public static final QChat chat = new QChat("chat");
 
-    public final DateTimePath<java.time.LocalDateTime> created_at = createDateTime("created_at", java.time.LocalDateTime.class);
+    public final com.ll.webchattingserver.global.QBaseEntity _super = new com.ll.webchattingserver.global.QBaseEntity(this);
+
+    //inherited
+    public final DateTimePath<java.time.LocalDateTime> createdAt = _super.createdAt;
+
+    public final NumberPath<Long> id = createNumber("id", Long.class);
 
     public final StringPath message = createString("message");
 
@@ -27,7 +32,8 @@ public class QChat extends EntityPathBase<Chat> {
 
     public final StringPath sender = createString("sender");
 
-    public final NumberPath<Long> TID = createNumber("TID", Long.class);
+    //inherited
+    public final DateTimePath<java.time.LocalDateTime> updatedAt = _super.updatedAt;
 
     public QChat(String variable) {
         super(Chat.class, forVariable(variable));

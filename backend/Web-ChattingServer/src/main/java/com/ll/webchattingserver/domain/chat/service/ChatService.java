@@ -25,7 +25,6 @@ public class ChatService {
                 sender(msg.getFrom()).
                 receiveRoom(msg.getTo()).
                 message(msg.getMessage()).
-                created_at(LocalDateTime.now()).
                 build();
 
         chatRepository.save(chat);
@@ -40,7 +39,7 @@ public class ChatService {
                 return MessageResponse.builder()
                     .sender(chat.getSender())
                     .message(chat.getMessage())
-                    .createdAt(chat.getCreated_at())
+                    .createdAt(chat.getCreatedAt())
                     .build();
         }).toList();
     }

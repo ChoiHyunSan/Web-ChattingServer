@@ -10,7 +10,7 @@ import java.util.List;
 
 public interface ChatRepository extends JpaRepository<Chat, Long> {
 
-    @Query("SELECT c FROM Chat c WHERE c.receiveRoom = :roomId AND DATE(c.created_at) = DATE(:date)")
+    @Query("SELECT c FROM Chat c WHERE c.receiveRoom = :roomId AND DATE(c.createdAt) = DATE(:date)")
     List<Chat> findByDateBetween(
             @Param("roomId") String roomId,
             @Param("date") LocalDateTime date

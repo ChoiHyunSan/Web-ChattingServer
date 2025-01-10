@@ -1,6 +1,7 @@
 package com.ll.webchattingserver.domain.room;
 
 import com.ll.webchattingserver.domain.userroom.UserRoom;
+import com.ll.webchattingserver.global.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -15,16 +16,13 @@ import java.util.UUID;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-public class Room {
+public class Room extends BaseEntity {
 
     @Id @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "room_id")
     private UUID id;
 
     private String name;
-
-    @CreatedDate
-    private LocalDateTime createdAt;
 
     @Builder.Default
     @OneToMany(mappedBy = "room")

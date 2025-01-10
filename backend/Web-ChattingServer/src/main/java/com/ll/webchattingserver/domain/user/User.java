@@ -1,6 +1,7 @@
 package com.ll.webchattingserver.domain.user;
 
 import com.ll.webchattingserver.domain.userroom.UserRoom;
+import com.ll.webchattingserver.global.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -13,15 +14,13 @@ import java.util.Set;
 /**
  * 테스트 용이성을 위해 우선 아이디/이메일 중복 등 기본적인 제약만 걸어둠 (추후에 수정 예정)
  */
-
-@EntityListeners(AuditingEntityListener.class)
 @Entity
 @Getter
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "users")
-public class User {
+public class User extends BaseEntity {
 
     @Id @Column(name = "user_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,10 +33,6 @@ public class User {
 
     @Column(unique = true)
     private String email;
-
-    @Column(updatable = false)
-    @CreatedDate
-    private LocalDateTime createdAt;
 
     @Builder.Default
     @OneToMany(mappedBy = "user")

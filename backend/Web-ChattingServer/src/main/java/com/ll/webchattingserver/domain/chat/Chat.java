@@ -1,5 +1,6 @@
 package com.ll.webchattingserver.domain.chat;
 
+import com.ll.webchattingserver.global.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -11,11 +12,12 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-public class Chat {
+public class Chat extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long TID;
+    @Column(name = "chat_id")
+    private Long id;
 
     @Column
     private String sender;
@@ -25,8 +27,4 @@ public class Chat {
 
     @Column
     private String message;
-
-    @CreatedDate
-    @Column(updatable = false)
-    private LocalDateTime created_at;
 }
