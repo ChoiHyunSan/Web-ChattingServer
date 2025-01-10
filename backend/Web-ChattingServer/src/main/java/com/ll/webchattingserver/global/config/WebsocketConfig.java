@@ -1,6 +1,6 @@
 package com.ll.webchattingserver.global.config;
 
-import com.ll.webchattingserver.global.security.jwt.JwtAuthenticationInterceptor;
+import com.ll.webchattingserver.global.security.jwt.authenticate.JwtAuthenticationInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
