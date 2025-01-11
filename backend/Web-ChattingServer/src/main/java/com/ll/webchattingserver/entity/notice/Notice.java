@@ -18,9 +18,6 @@ public class Notice extends BaseEntity {
     @Column(name = "notice_id")
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(updatable = false)
-    private User author;
-
+    private String author;
     private String content;
 }

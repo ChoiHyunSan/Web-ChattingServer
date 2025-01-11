@@ -19,10 +19,10 @@ public class NoticeCreateResponse {
     @Schema(description = "생성된 공지사항 내용")
     private String content;
 
-    public static NoticeCreateResponse of(Notice notice) {
+    public static NoticeCreateResponse of(Long id, String content) {
         return NoticeCreateResponse.builder()
-                .id(notice.getId())
-                .content(notice.getContent())
+                .id(id)
+                .content(content)
                 .build();
     }
 }

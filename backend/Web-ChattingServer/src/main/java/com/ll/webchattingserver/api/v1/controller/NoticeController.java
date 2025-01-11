@@ -40,6 +40,11 @@ public class NoticeController {
             @RequestBody NoticeCreateRequest request,
             @AuthenticationPrincipal UserPrincipal principal
     ){
-        return Result.success(noticeService.createNotice(principal.getId(), principal.getRole(), request));
+        NoticeCreateResponse response = noticeService.createNotice(
+                principal.getId(),
+                principal.getRole(),
+                principal.getUsername(),
+                request);
+        return Result.success(response);
     }
 }
