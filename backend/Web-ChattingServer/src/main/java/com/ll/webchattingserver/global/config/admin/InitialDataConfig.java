@@ -1,8 +1,10 @@
 package com.ll.webchattingserver.global.config.admin;
 
-import com.ll.webchattingserver.core.domain.user.User;
-import com.ll.webchattingserver.core.domain.user.UserRole;
-import com.ll.webchattingserver.core.domain.user.service.UserService;
+import com.ll.webchattingserver.core.domain.auth.implement.UserAppender;
+import com.ll.webchattingserver.core.domain.auth.implement.UserReader;
+import com.ll.webchattingserver.entity.user.User;
+import com.ll.webchattingserver.core.enums.UserRole;
+import com.ll.webchattingserver.core.domain.auth.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationRunner;
@@ -15,7 +17,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @RequiredArgsConstructor
 public class InitialDataConfig {
 
-    private final UserService userService;
+    private final UserAppender userAppender;
+    private final UserReader userReader;
     private final PasswordEncoder passwordEncoder;
 
     @Value("${admin.username}")
@@ -31,7 +34,7 @@ public class InitialDataConfig {
     public ApplicationRunner init() {
         return args -> {
             // 이미 admin 계정이 있는지 확인
-            if (!userService.existsByUsername("admin")) {
+            if (!userReader.existsByUsername("admin")) {
                 String password = passwordEncoder.encode(adminPassword);
                 User admin = User.builder()
                         .username(adminUsername)
@@ -40,7 +43,7 @@ public class InitialDataConfig {
                         .role(UserRole.ROLE_ADMIN)
                         .build();
 
-                userService.save(admin);
+                userAppender.saveAdminUser(admin);
             }
         };
     }

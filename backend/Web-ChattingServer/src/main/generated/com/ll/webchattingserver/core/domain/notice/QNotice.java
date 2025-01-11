@@ -2,6 +2,7 @@ package com.ll.webchattingserver.core.domain.notice;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
+import com.ll.webchattingserver.entity.notice.Notice;
 import com.querydsl.core.types.dsl.*;
 
 import com.querydsl.core.types.PathMetadata;
@@ -24,7 +25,7 @@ public class QNotice extends EntityPathBase<Notice> {
 
     public final com.ll.webchattingserver.global.QBaseEntity _super = new com.ll.webchattingserver.global.QBaseEntity(this);
 
-    public final com.ll.webchattingserver.core.domain.user.QUser author;
+    public final com.ll.webchattingserver.core.domain.auth.QUser author;
 
     public final StringPath content = createString("content");
 
@@ -54,7 +55,7 @@ public class QNotice extends EntityPathBase<Notice> {
 
     public QNotice(Class<? extends Notice> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
-        this.author = inits.isInitialized("author") ? new com.ll.webchattingserver.core.domain.user.QUser(forProperty("author")) : null;
+        this.author = inits.isInitialized("author") ? new com.ll.webchattingserver.core.domain.auth.QUser(forProperty("author")) : null;
     }
 
 }

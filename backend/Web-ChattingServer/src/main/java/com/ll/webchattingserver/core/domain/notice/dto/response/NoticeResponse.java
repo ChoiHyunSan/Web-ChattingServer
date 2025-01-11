@@ -1,6 +1,6 @@
 package com.ll.webchattingserver.core.domain.notice.dto.response;
 
-import com.ll.webchattingserver.core.domain.notice.Notice;
+import com.ll.webchattingserver.entity.notice.Notice;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 

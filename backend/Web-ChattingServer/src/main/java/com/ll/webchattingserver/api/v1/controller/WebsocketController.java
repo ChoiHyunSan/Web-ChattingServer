@@ -1,7 +1,7 @@
 package com.ll.webchattingserver.api.v1.controller;
 
-import com.ll.webchattingserver.core.domain.chat.dto.request.Message;
-import com.ll.webchattingserver.core.domain.chat.service.ChatService;
+import com.ll.webchattingserver.core.domain.message.dto.request.MessageRequest;
+import com.ll.webchattingserver.core.domain.message.service.MessageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -14,13 +14,13 @@ import org.springframework.stereotype.Controller;
 @Slf4j
 public class WebsocketController {
 
-    private final ChatService chatService;
+    private final MessageService chatService;
 
     @MessageMapping("/chat/message/{roomId}")
     @SendTo("/sub/chat/room/{roomId}")
-    public Message receiveMessage(
+    public MessageRequest receiveMessage(
             @DestinationVariable("roomId") String roomId,
-            Message message) {
+            MessageRequest message) {
 
         chatService.saveChatMessage(message);
         return message;

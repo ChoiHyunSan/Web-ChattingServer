@@ -1,18 +1,17 @@
 package com.ll.webchattingserver.core.domain.room.service;
 
-import com.ll.webchattingserver.core.domain.room.Room;
+import com.ll.webchattingserver.entity.room.Room;
 import com.ll.webchattingserver.core.domain.room.dto.RoomCond;
 import com.ll.webchattingserver.core.domain.room.dto.RoomRedisDto;
 import com.ll.webchattingserver.core.domain.room.dto.response.RoomCreateResponse;
 import com.ll.webchattingserver.core.domain.room.dto.response.RoomJoinResponse;
 import com.ll.webchattingserver.core.domain.room.dto.response.RoomLeaveResponse;
-import com.ll.webchattingserver.core.domain.room.repository.RoomQueryRepository;
-import com.ll.webchattingserver.core.domain.room.repository.RoomRepository;
-import com.ll.webchattingserver.core.domain.userroom.UserRoom;
+import com.ll.webchattingserver.entity.room.repository.RoomQueryRepository;
+import com.ll.webchattingserver.entity.room.repository.RoomRepository;
+import com.ll.webchattingserver.entity.userroom.UserRoom;
 import com.ll.webchattingserver.core.domain.userroom.service.UserRoomService;
-import com.ll.webchattingserver.core.domain.user.User;
-import com.ll.webchattingserver.core.domain.user.service.UserService;
-import com.ll.webchattingserver.global.cache.RedisService;
+import com.ll.webchattingserver.entity.user.User;
+import com.ll.webchattingserver.core.domain.auth.service.UserService;
 import com.ll.webchattingserver.global.exception.clazz.service.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +19,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j

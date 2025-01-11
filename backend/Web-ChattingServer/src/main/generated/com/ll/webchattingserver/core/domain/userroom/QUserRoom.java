@@ -2,6 +2,7 @@ package com.ll.webchattingserver.core.domain.userroom;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
+import com.ll.webchattingserver.entity.userroom.UserRoom;
 import com.querydsl.core.types.dsl.*;
 
 import com.querydsl.core.types.PathMetadata;
@@ -34,7 +35,7 @@ public class QUserRoom extends EntityPathBase<UserRoom> {
     //inherited
     public final DateTimePath<java.time.LocalDateTime> updatedAt = _super.updatedAt;
 
-    public final com.ll.webchattingserver.core.domain.user.QUser user;
+    public final com.ll.webchattingserver.core.domain.auth.QUser user;
 
     public QUserRoom(String variable) {
         this(UserRoom.class, forVariable(variable), INITS);
@@ -55,7 +56,7 @@ public class QUserRoom extends EntityPathBase<UserRoom> {
     public QUserRoom(Class<? extends UserRoom> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
         this.room = inits.isInitialized("room") ? new com.ll.webchattingserver.core.domain.room.QRoom(forProperty("room")) : null;
-        this.user = inits.isInitialized("user") ? new com.ll.webchattingserver.core.domain.user.QUser(forProperty("user")) : null;
+        this.user = inits.isInitialized("user") ? new com.ll.webchattingserver.core.domain.auth.QUser(forProperty("user")) : null;
     }
 
 }

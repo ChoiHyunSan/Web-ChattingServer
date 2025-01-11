@@ -1,13 +1,13 @@
 package com.ll.webchattingserver.core.domain.notice.service;
 
-import com.ll.webchattingserver.core.domain.notice.Notice;
+import com.ll.webchattingserver.entity.notice.Notice;
 import com.ll.webchattingserver.core.domain.notice.dto.request.NoticeCreateRequest;
 import com.ll.webchattingserver.core.domain.notice.dto.response.NoticeCreateResponse;
 import com.ll.webchattingserver.core.domain.notice.dto.response.NoticeResponse;
-import com.ll.webchattingserver.core.domain.notice.repository.NoticeRepository;
-import com.ll.webchattingserver.core.domain.user.User;
-import com.ll.webchattingserver.core.domain.user.UserRole;
-import com.ll.webchattingserver.core.domain.user.service.UserService;
+import com.ll.webchattingserver.entity.notice.repository.NoticeRepository;
+import com.ll.webchattingserver.entity.user.User;
+import com.ll.webchattingserver.core.enums.UserRole;
+import com.ll.webchattingserver.core.domain.auth.service.UserService;
 import com.ll.webchattingserver.global.exception.clazz.service.NoAuthorizeException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

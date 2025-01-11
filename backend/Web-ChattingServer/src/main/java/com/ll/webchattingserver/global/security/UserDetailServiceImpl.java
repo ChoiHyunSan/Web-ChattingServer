@@ -1,7 +1,7 @@
 package com.ll.webchattingserver.global.security;
 
-import com.ll.webchattingserver.core.domain.user.User;
-import com.ll.webchattingserver.core.domain.user.repository.UserRepository;
+import com.ll.webchattingserver.entity.user.User;
+import com.ll.webchattingserver.entity.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

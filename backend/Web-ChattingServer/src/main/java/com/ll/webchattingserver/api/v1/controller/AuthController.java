@@ -1,12 +1,12 @@
 package com.ll.webchattingserver.api.v1.controller;
 
 import com.ll.webchattingserver.api.v1.Result;
-import com.ll.webchattingserver.core.domain.user.dto.request.LoginRequest;
-import com.ll.webchattingserver.core.domain.user.dto.request.SignupRequest;
-import com.ll.webchattingserver.core.domain.user.dto.response.SignupResponse;
-import com.ll.webchattingserver.core.domain.user.dto.response.TokenResponse;
-import com.ll.webchattingserver.core.domain.user.service.AuthService;
-import com.ll.webchattingserver.core.domain.user.service.UserService;
+import com.ll.webchattingserver.core.domain.auth.dto.request.LoginRequest;
+import com.ll.webchattingserver.core.domain.auth.dto.request.SignupRequest;
+import com.ll.webchattingserver.core.domain.auth.dto.response.SignupResponse;
+import com.ll.webchattingserver.core.domain.auth.dto.response.TokenResponse;
+import com.ll.webchattingserver.core.domain.auth.service.AuthService;
+import com.ll.webchattingserver.core.domain.auth.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -32,6 +32,9 @@ public class AuthController {
     public Result<TokenResponse> login(
             @RequestBody LoginRequest request
     ) {
+        // 여기서 Request 를 비즈니스 로직에서 처리하는 어떠한 객체로 변환을 해서 넘기자.
+        // ex. LoginRequest -> LoginInfo
+        // Bean Validation 을 사용하는 대신, Request에 대한 validate메서드를 만들어서 호출하거나, 비즈니스 객체로 변환하면서 검증할 수도 있다.
         return Result.success(authService.login(request));
     }
 

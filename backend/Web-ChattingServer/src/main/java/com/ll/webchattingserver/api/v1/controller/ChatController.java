@@ -1,8 +1,8 @@
 package com.ll.webchattingserver.api.v1.controller;
 
 import com.ll.webchattingserver.api.v1.Result;
-import com.ll.webchattingserver.core.domain.chat.dto.response.MessageResponse;
-import com.ll.webchattingserver.core.domain.chat.service.ChatService;
+import com.ll.webchattingserver.core.domain.message.dto.response.MessageResponse;
+import com.ll.webchattingserver.core.domain.message.service.MessageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -17,7 +17,7 @@ import java.util.List;
 @RequestMapping("/api/v1/chat")
 public class ChatController {
 
-    private final ChatService chatService;
+    private final MessageService chatService;
 
     @GetMapping("/list/{roomId}/{date}")
     public Result<List<MessageResponse>> list(

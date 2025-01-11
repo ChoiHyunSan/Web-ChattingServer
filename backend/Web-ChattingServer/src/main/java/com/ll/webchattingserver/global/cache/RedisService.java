@@ -1,8 +1,8 @@
 package com.ll.webchattingserver.global.cache;
 
 import com.ll.webchattingserver.core.domain.room.dto.RoomRedisDto;
-import com.ll.webchattingserver.core.domain.room.Room;
-import com.ll.webchattingserver.core.domain.user.User;
+import com.ll.webchattingserver.entity.room.Room;
+import com.ll.webchattingserver.entity.user.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;

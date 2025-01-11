@@ -75,6 +75,8 @@ public class RoomController {
             @AuthenticationPrincipal UserPrincipal principal
     ){
         log.info("User Id: {}, Name : {}", principal.getId(), principal.getUsername());
+
+
         return Result.success(roomService.getMyList(principal.getId()));
     }
 

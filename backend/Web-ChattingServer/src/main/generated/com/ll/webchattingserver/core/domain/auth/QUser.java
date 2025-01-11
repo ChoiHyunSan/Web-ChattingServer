@@ -1,8 +1,9 @@
-package com.ll.webchattingserver.core.domain.room;
+package com.ll.webchattingserver.core.domain.auth;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
-import com.ll.webchattingserver.entity.room.Room;
+import com.ll.webchattingserver.core.enums.UserRole;
+import com.ll.webchattingserver.entity.user.User;
 import com.ll.webchattingserver.entity.userroom.UserRoom;
 import com.querydsl.core.types.dsl.*;
 
@@ -13,39 +14,45 @@ import com.querydsl.core.types.dsl.PathInits;
 
 
 /**
- * QRoom is a Querydsl query type for Room
+ * QUser is a Querydsl query type for User
  */
 @Generated("com.querydsl.codegen.DefaultEntitySerializer")
-public class QRoom extends EntityPathBase<Room> {
+public class QUser extends EntityPathBase<User> {
 
-    private static final long serialVersionUID = 173438529L;
+    private static final long serialVersionUID = 1580452929L;
 
-    public static final QRoom room = new QRoom("room");
+    public static final QUser user = new QUser("user");
 
     public final com.ll.webchattingserver.global.QBaseEntity _super = new com.ll.webchattingserver.global.QBaseEntity(this);
 
     //inherited
     public final DateTimePath<java.time.LocalDateTime> createdAt = _super.createdAt;
 
-    public final ComparablePath<java.util.UUID> id = createComparable("id", java.util.UUID.class);
+    public final StringPath email = createString("email");
 
-    public final StringPath name = createString("name");
+    public final NumberPath<Long> id = createNumber("id", Long.class);
+
+    public final StringPath password = createString("password");
+
+    public final EnumPath<UserRole> role = createEnum("role", UserRole.class);
 
     //inherited
     public final DateTimePath<java.time.LocalDateTime> updatedAt = _super.updatedAt;
 
+    public final StringPath username = createString("username");
+
     public final SetPath<UserRoom, com.ll.webchattingserver.core.domain.userroom.QUserRoom> userRooms = this.<UserRoom, com.ll.webchattingserver.core.domain.userroom.QUserRoom>createSet("userRooms", UserRoom.class, com.ll.webchattingserver.core.domain.userroom.QUserRoom.class, PathInits.DIRECT2);
 
-    public QRoom(String variable) {
-        super(Room.class, forVariable(variable));
+    public QUser(String variable) {
+        super(User.class, forVariable(variable));
     }
 
-    public QRoom(Path<? extends Room> path) {
+    public QUser(Path<? extends User> path) {
         super(path.getType(), path.getMetadata());
     }
 
-    public QRoom(PathMetadata metadata) {
-        super(Room.class, metadata);
+    public QUser(PathMetadata metadata) {
+        super(User.class, metadata);
     }
 
 }

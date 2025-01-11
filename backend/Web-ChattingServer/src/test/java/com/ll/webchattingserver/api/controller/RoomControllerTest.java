@@ -3,10 +3,10 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ll.webchattingserver.api.v1.Result;
 import com.ll.webchattingserver.core.domain.room.dto.RoomRedisDto;
-import com.ll.webchattingserver.core.domain.room.Room;
-import com.ll.webchattingserver.core.domain.room.repository.RoomRepository;
-import com.ll.webchattingserver.core.domain.user.User;
-import com.ll.webchattingserver.core.domain.user.service.UserService;
+import com.ll.webchattingserver.entity.room.Room;
+import com.ll.webchattingserver.entity.room.repository.RoomRepository;
+import com.ll.webchattingserver.entity.user.User;
+import com.ll.webchattingserver.core.domain.auth.service.UserService;
 import com.ll.webchattingserver.room.RoomTestHelper;
 
 import jakarta.transaction.Transactional;

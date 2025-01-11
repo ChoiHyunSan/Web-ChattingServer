@@ -1,8 +1,8 @@
 package com.ll.webchattingserver.api.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ll.webchattingserver.core.domain.user.dto.request.LoginRequest;
-import com.ll.webchattingserver.core.domain.user.dto.request.SignupRequest;
+import com.ll.webchattingserver.core.domain.auth.dto.request.LoginRequest;
+import com.ll.webchattingserver.core.domain.auth.dto.request.SignupRequest;
 import com.ll.webchattingserver.global.exception.clazz.service.DuplicateEmailException;
 import com.ll.webchattingserver.global.exception.clazz.service.DuplicateUsernameException;
 import com.ll.webchattingserver.global.exception.clazz.service.PasswordMismatchException;

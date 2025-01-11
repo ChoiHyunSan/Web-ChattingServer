@@ -1,10 +1,10 @@
 package com.ll.webchattingserver.core.domain.userroom.service;
 
-import com.ll.webchattingserver.core.domain.room.Room;
-import com.ll.webchattingserver.core.domain.user.User;
-import com.ll.webchattingserver.core.domain.userroom.UserRoom;
-import com.ll.webchattingserver.core.domain.userroom.repository.UserRoomQueryRepository;
-import com.ll.webchattingserver.core.domain.userroom.repository.UserRoomRepository;
+import com.ll.webchattingserver.entity.room.Room;
+import com.ll.webchattingserver.entity.user.User;
+import com.ll.webchattingserver.entity.userroom.UserRoom;
+import com.ll.webchattingserver.entity.userroom.repository.UserRoomQueryRepository;
+import com.ll.webchattingserver.entity.userroom.repository.UserRoomRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
