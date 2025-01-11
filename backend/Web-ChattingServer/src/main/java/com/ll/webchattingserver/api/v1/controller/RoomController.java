@@ -40,7 +40,7 @@ public class RoomController {
             @AuthenticationPrincipal UserPrincipal principal){
         log.info("create: {}", request);
         log.info("principal: {}", principal.getUsername());
-        return Result.success(roomService.create(principal.getUsername(), request.getRoomName()));
+        return Result.success(roomService.create(principal.getId(), request.getRoomName()));
     }
 
     @Operation(
@@ -77,7 +77,7 @@ public class RoomController {
         log.info("User Id: {}, Name : {}", principal.getId(), principal.getUsername());
 
 
-        return Result.success(roomService.getMyList(principal.getId()));
+        return Result.success(roomService.getUserList(principal.getId()));
     }
 
     @Operation(
@@ -90,7 +90,7 @@ public class RoomController {
             @AuthenticationPrincipal UserPrincipal principal
     ) {
         log.info("User Id: {}, Name : {}", principal.getId(), principal.getUsername());
-        return Result.success(roomService.join(principal.getUsername(), roomId));
+        return Result.success(roomService.join(principal.getId(), roomId));
     }
 
     @Operation(

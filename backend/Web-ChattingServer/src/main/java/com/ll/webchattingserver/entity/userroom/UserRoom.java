@@ -6,6 +6,8 @@ import com.ll.webchattingserver.global.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.UUID;
+
 @Entity
 @Getter
 @Builder
@@ -17,18 +19,13 @@ public class UserRoom extends BaseEntity {
     @Column(name = "userroom_id")
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    User user;
+    private Long userId;
+    private UUID roomId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "room_id")
-    Room room;
-
-    public static UserRoom of(User user, Room room){
+    public static UserRoom of(Long userId, UUID roomId) {
         return UserRoom.builder()
-                .user(user)
-                .room(room)
+                .userId(userId)
+                .roomId(roomId)
                 .build();
     }
 }

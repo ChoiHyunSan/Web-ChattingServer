@@ -19,20 +19,11 @@ public class Room extends BaseEntity {
     @Id @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "room_id")
     private UUID id;
-
     private String name;
-
-    @Builder.Default
-    @OneToMany(mappedBy = "room")
-    private Set<UserRoom> userRooms = new HashSet<>();
 
     public static Room of(String roomName) {
         return Room.builder()
                 .name(roomName)
                 .build();
-    }
-
-    public int getParticipantCount() {
-        return userRooms.size();
     }
 }

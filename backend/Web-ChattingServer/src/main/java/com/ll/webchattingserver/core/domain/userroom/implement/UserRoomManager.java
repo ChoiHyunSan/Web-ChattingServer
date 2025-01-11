@@ -16,12 +16,13 @@ public class UserRoomManager {
 
     private final UserRoomRepository userRoomRepository;
     private final UserRoomQueryRepository userRoomQueryRepository;
+    private final UserRoomReader userRoomReader;
 
-    public void createUserRoom(User user, Room room) {
-        UserRoom userRoom = UserRoom.of(user, room);
-        user.getUserRooms().add(userRoom);
-        room.getUserRooms().add(userRoom);
-        userRoomRepository.save(userRoom);
+    public void createUserRoom(Long userId, UUID roomId) {
+        if(userRoomReader.findByUsernameAndRoomId(userId, roomId).isEmpty()){
+            UserRoom userRoom = UserRoom.of(userId, roomId);
+            userRoomRepository.save(userRoom);
+        }
     }
 
     public void deleteUserRoom(UUID roomId, Long userId) {

@@ -1,10 +1,8 @@
 package com.ll.webchattingserver.entity.room.repository;
 
 import com.ll.webchattingserver.core.domain.room.dto.RoomCond;
-import com.ll.webchattingserver.core.domain.room.dto.RoomRedisDto;
-import com.ll.webchattingserver.entity.user.User;
+import com.ll.webchattingserver.entity.room.Room;
 import com.querydsl.core.types.OrderSpecifier;
-import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -23,19 +21,9 @@ public class RoomQueryRepository {
 
     // 다대다 상황에서, 참여자의 수만 있으면 된다.
     // 이외의 대부분의 상황에서는 Redis의 데이터를 이용할 것이므로, DTO로 가져간다.
-    public List<RoomRedisDto> findByCond(RoomCond cond) {
+    public List<Room> findByCond(RoomCond cond) {
         return queryFactory
-                .select(Projections.constructor(RoomRedisDto.class,
-                        room.id,
-                        room.name,
-                        room.createdAt,
-                        room.userRooms.size()
-//                        JPAExpressions
-//                                .select(userRoom.count())
-//                                .from(userRoom)
-//                                .where(userRoom.room.eq(room))
-                ))
-                .from(room)
+                .selectFrom(room)
                 .where(
                         containUser(cond.getUsernameOpt()),
                         equalRoomName(cond.getRoomNameOpt())
@@ -46,20 +34,11 @@ public class RoomQueryRepository {
                 .fetch();
     }
 
-    // TODO : 나중에 방이 많아질 것을 대비해서 페이징을 하거나, 정렬 및 검색 기능을 추가해볼 수 있다. (findByCond 쓰게끔 해도 될듯하다.)
-    public List<RoomRedisDto> findByUserContain(User user) {
-        return queryFactory
-                .select(Projections.constructor(RoomRedisDto.class,
-                        room.id,
-                        room.name,
-                        room.createdAt,
-                        room.userRooms.size()
-                ))
+    public List<Room> findRoomsByUserId(Long id) {
+        return queryFactory.selectFrom(room)
                 .from(room)
-                .where(
-                        containUser(Optional.of(user.getUsername()))
-                )
-                .orderBy(getSort("default"))
+                .leftJoin(userRoom).on(room.id.eq(userRoom.roomId))
+                .where(userRoom.userId.eq(id))
                 .fetch();
     }
 
@@ -80,6 +59,7 @@ public class RoomQueryRepository {
     }
 
     private BooleanExpression containUser(Optional<String> username) {
-        return username.map(userRoom.user.username::eq).orElse(null);
+        return null;
+        // return username.map(userRoom.user.username::eq).orElse(null);
     }
 }

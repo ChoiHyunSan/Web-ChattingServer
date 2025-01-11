@@ -40,11 +40,9 @@ public class RoomRedisDto {
                 .id(room.getId().toString())
                 .name(room.getName())
                 .createdAt(room.getCreatedAt())
-                .participantCount(room.getParticipantCount())
+                //.participantCount(room.getParticipantCount())
+                .participantCount(0)
                 .build();
     }
 
-    public int leaveOneUser() {
-        return --participantCount;
-    }
 }

@@ -32,10 +32,6 @@ public class User extends BaseEntity {
     @Column(unique = true)
     private String email;
 
-    @Builder.Default
-    @OneToMany(mappedBy = "user")
-    private Set<UserRoom> userRooms = new HashSet<>();
-
     @Enumerated(EnumType.STRING)
     private UserRole role;
 
