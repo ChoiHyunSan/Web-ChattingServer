@@ -1,5 +1,6 @@
 package com.ll.webchattingserver.api.v1.controller;
 
+import com.ll.webchattingserver.core.domain.message.Message;
 import com.ll.webchattingserver.core.domain.message.dto.request.MessageRequest;
 import com.ll.webchattingserver.core.domain.message.service.MessageService;
 import lombok.RequiredArgsConstructor;
@@ -20,9 +21,9 @@ public class WebsocketController {
     @SendTo("/sub/chat/room/{roomId}")
     public MessageRequest receiveMessage(
             @DestinationVariable("roomId") String roomId,
-            MessageRequest message) {
+            MessageRequest request) {
 
-        chatService.saveChatMessage(message);
-        return message;
+        chatService.saveChatMessage(Message.of(request));
+        return request;
     }
 }
