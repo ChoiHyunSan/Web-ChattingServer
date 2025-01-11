@@ -12,10 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
-
-import java.security.Key;
 import java.util.Collections;
-import java.util.Date;
 
 @Slf4j
 @Component
@@ -39,28 +36,8 @@ public class JwtProvider {
         return tokenValidator.validateAccessToken(token);
     }
 
-    public void validateRefreshToken(String token) {
-        tokenValidator.validateRefreshToken(token);
-    }
-
     public String getUsernameByAccessToken(String token) {
         return tokenParser.getUsernameFromAccessToken(token);
-    }
-
-    public String getUsernameByRefreshToken(String token) {
-        return tokenParser.getUsernameFromRefreshToken(token);
-    }
-
-    public Long getUserIdByAccessToken(String token) {
-        return tokenParser.getUserIdFromAccessToken(token);
-    }
-
-    public Long getUserIdByRefreshToken(String token) {
-        return tokenParser.getUserIdFromRefreshToken(token);
-    }
-
-    public String getRoleByRefreshToken(String token) {
-        return tokenParser.getRoleFromRefreshToken(token);
     }
 
     public String extractTokenByHeader(String bearerToken) {
@@ -78,5 +55,10 @@ public class JwtProvider {
                 null,
                 Collections.emptyList()
         );
+    }
+
+    public CustomUserDetails extractUserDetailsFromRefreshToken(String token) {
+        tokenValidator.validateRefreshToken(token);
+        return tokenParser.getUserDetailsFromRefreshToken(token);
     }
 }

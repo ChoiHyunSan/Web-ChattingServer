@@ -1,5 +1,6 @@
 package com.ll.webchattingserver.global.security.jwt.token;
 
+import com.ll.webchattingserver.global.security.CustomUserDetails;
 import com.ll.webchattingserver.global.security.UserPrincipal;
 import com.ll.webchattingserver.global.security.jwt.authenticate.JwtKeyProvider;
 import io.jsonwebtoken.Claims;
@@ -75,6 +76,23 @@ public class TokenParser {
         try {
             Claims claims = getClaims(token, key);
             return claims.get("role", String.class);
+        } catch (JwtException | IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    public CustomUserDetails getUserDetailsFromRefreshToken(String token) {
+        try {
+            Claims claims = getClaims(token, keyProvider.getRefreshKey());
+            String username = claims.get("username", String.class);
+            Long userId = claims.get("id", Long.class);
+            String role = claims.get("role", String.class);
+
+            return CustomUserDetails.builder()
+                    .username(username)
+                    .id(userId)
+                    .role(role)
+                    .build();
         } catch (JwtException | IllegalArgumentException e) {
             return null;
         }

@@ -1,7 +1,9 @@
 package com.ll.webchattingserver.core.domain.auth.dto.response;
 
+import com.ll.webchattingserver.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
+import org.springframework.security.core.userdetails.UserDetails;
 
 @Data
 @Builder
@@ -9,7 +11,7 @@ import lombok.*;
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Schema(description = "생성된 토큰을 반환합니다.")
 public class TokenResponse {
-    
+
     @Schema(description = "토큰 값")
     private String token;
 

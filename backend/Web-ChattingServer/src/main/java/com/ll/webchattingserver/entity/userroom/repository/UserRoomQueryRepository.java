@@ -10,7 +10,8 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.UUID;
 
-import static com.ll.webchattingserver.core.domain.userroom.QUserRoom.userRoom;
+import static com.ll.webchattingserver.entity.userroom.QUserRoom.userRoom;
+
 
 @Repository
 @RequiredArgsConstructor

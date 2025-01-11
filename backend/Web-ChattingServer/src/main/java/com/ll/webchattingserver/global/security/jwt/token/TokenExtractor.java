@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class TokenExtractor {
+
     public String extractFromHeader(String bearerToken) {
         if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);
