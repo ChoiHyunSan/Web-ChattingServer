@@ -2,11 +2,11 @@ package com.ll.webchattingserver.api.controller;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ll.webchattingserver.api.v1.Result;
+import com.ll.webchattingserver.core.domain.auth.implement.UserReader;
 import com.ll.webchattingserver.core.domain.room.dto.RoomRedisDto;
 import com.ll.webchattingserver.entity.room.Room;
 import com.ll.webchattingserver.entity.room.repository.RoomRepository;
 import com.ll.webchattingserver.entity.user.User;
-import com.ll.webchattingserver.core.domain.auth.service.UserService;
 import com.ll.webchattingserver.room.RoomTestHelper;
 
 import jakarta.transaction.Transactional;
@@ -40,8 +40,7 @@ class RoomControllerTest {
     @Autowired private ObjectMapper objectMapper;
     @Autowired private RoomTestHelper roomTestHelper;
     @Autowired private RoomRepository roomRepository;
-    @Autowired private RedisTemplate<String, Object> redisTemplate;
-    @Autowired private UserService userService;
+    @Autowired private UserReader userReader;
 
     private String userToken1;
     private String userToken2;
@@ -73,9 +72,6 @@ class RoomControllerTest {
             Room room = roomRepository.findById(roomId).get();
             assertThat(room.getName()).isEqualTo(roomName);
             assertThat(room.getParticipantCount()).isEqualTo(1);
-
-            // Redis 검증
-            verifyRoomCacheWithParticipants(List.of(roomId), 1);
         }
     }
 
@@ -90,8 +86,6 @@ class RoomControllerTest {
 
             String token2 = roomTestHelper.getAuthToken("김철수", "kim@test.com", PASSWORD);
             roomIds.add(roomTestHelper.createRoom(token2, "Room 3"));
-
-            redisTemplate.delete("chat:rooms");
 
             // When
             String responseBody = mockMvc.perform(get("/api/room/list")
@@ -109,8 +103,6 @@ class RoomControllerTest {
             assertThat(rooms).hasSize(3);
             assertThat(rooms).extracting("name")
                     .containsExactlyInAnyOrder("Room 1", "Room 2", "Room 3");
-
-            verifyRoomCache(roomIds);
         }
 
         @Test
@@ -131,8 +123,6 @@ class RoomControllerTest {
             assertThat(myRooms).hasSize(3);
             assertThat(myRooms).extracting("name")
                     .containsExactlyInAnyOrder("Room 1", "Room 2", "Room 3");
-
-            verifyUserRoomCache(USERNAME, roomIds);
         }
     }
 
@@ -166,8 +156,6 @@ class RoomControllerTest {
             assertThat(myRooms).hasSize(3);
             assertThat(myRooms).extracting("name")
                     .containsExactlyInAnyOrder("Room 1", "Room 2", "Room 3");
-
-            verifyUserRoomCache(USERNAME, roomIds);
         }
     }
 
@@ -199,11 +187,6 @@ class RoomControllerTest {
             // Then
             List<RoomRedisDto> myRooms = extractRoomList(myRoomsResponse);
             assertThat(myRooms).hasSize(0);
-
-            User user = userService.findByUsername(USERNAME);
-            String userRoomsKey = "chat:user:" + user.getId() + ":rooms";
-            Set<Object> cachedRooms = redisTemplate.opsForSet().members(userRoomsKey);
-            assertThat(cachedRooms).size().isEqualTo(0);
         }
     }
 
@@ -212,7 +195,6 @@ class RoomControllerTest {
         for (int i = 1; i <= count; i++) {
             roomIds.add(roomTestHelper.createRoom(userToken, "Room " + i));
         }
-        redisTemplate.delete("chat:user:홍길동:rooms");    // 레디스 정보 삭제
         return roomIds;
     }
 
@@ -223,40 +205,5 @@ class RoomControllerTest {
         );
         Result<List<RoomRedisDto>> result = objectMapper.readValue(responseBody, listType);
         return result.getData();
-    }
-
-    private void verifyRoomCache(List<UUID> roomIds) {
-        for (UUID roomId : roomIds) {
-            String roomKey = "chat:room:" + roomId;
-            RoomRedisDto cachedRoom = (RoomRedisDto) redisTemplate.opsForValue().get(roomKey);
-
-            assertThat(cachedRoom).isNotNull();
-            assertThat(cachedRoom.getId()).isEqualTo(roomId.toString());
-        }
-    }
-
-    // 참여자 수를 검증해야 하는 경우를 위한 별도 메서드
-    private void verifyRoomCacheWithParticipants(List<UUID> roomIds, int expectedParticipants) {
-        for (UUID roomId : roomIds) {
-            String roomKey = "chat:room:" + roomId;
-            RoomRedisDto cachedRoom = (RoomRedisDto) redisTemplate.opsForValue().get(roomKey);
-
-            assertThat(cachedRoom).isNotNull();
-            assertThat(cachedRoom.getId()).isEqualTo(roomId.toString());
-            assertThat(cachedRoom.getParticipantCount()).isEqualTo(expectedParticipants);
-        }
-    }
-
-    private void verifyUserRoomCache(String username, List<UUID> roomIds) {
-        User user = userService.findByUsername(username);
-        String userRoomsKey = "chat:user:" + user.getId() + ":rooms";
-        Set<Object> cachedRooms = redisTemplate.opsForSet().members(userRoomsKey);
-
-        assertThat(cachedRooms).isNotNull();
-        assertThat(cachedRooms).hasSize(roomIds.size());
-        assertThat(cachedRooms.stream()
-                .map(obj -> UUID.fromString((String) obj))
-                .collect(Collectors.toList()))
-                .containsExactlyInAnyOrderElementsOf(roomIds);
     }
 }

@@ -12,8 +12,8 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
-import static com.ll.webchattingserver.core.domain.userroom.QUserRoom.userRoom;
-import static com.ll.webchattingserver.core.domain.room.QRoom.room;
+import static com.ll.webchattingserver.entity.room.QRoom.room;
+import static com.ll.webchattingserver.entity.userroom.QUserRoom.userRoom;
 
 @Repository
 @RequiredArgsConstructor

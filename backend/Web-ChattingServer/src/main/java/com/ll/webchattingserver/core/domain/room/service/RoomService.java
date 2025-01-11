@@ -1,5 +1,6 @@
 package com.ll.webchattingserver.core.domain.room.service;
 
+import com.ll.webchattingserver.core.domain.auth.implement.UserReader;
 import com.ll.webchattingserver.entity.room.Room;
 import com.ll.webchattingserver.core.domain.room.dto.RoomCond;
 import com.ll.webchattingserver.core.domain.room.dto.RoomRedisDto;
@@ -11,7 +12,6 @@ import com.ll.webchattingserver.entity.room.repository.RoomRepository;
 import com.ll.webchattingserver.entity.userroom.UserRoom;
 import com.ll.webchattingserver.core.domain.userroom.service.UserRoomService;
 import com.ll.webchattingserver.entity.user.User;
-import com.ll.webchattingserver.core.domain.auth.service.UserService;
 import com.ll.webchattingserver.global.exception.clazz.service.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,14 +29,14 @@ public class RoomService {
     private final RoomRepository roomRepository;
     private final RoomQueryRepository roomQueryRepository;
 
-    private final UserService userService;
+    private final UserReader userReader;
     // private final RedisService redisService;
     private final UserRoomService userRoomService;
 
     @Transactional()
     public RoomCreateResponse create(String name, String roomName) {
 
-        User user = userService.findByUsername(name);
+        User user = userReader.findByUsername(name);
         Room room = createRoom(roomName);
         userRoomService.createUserRoom(user, room);
 
@@ -78,7 +78,7 @@ public class RoomService {
 
     @Transactional
     public RoomJoinResponse join(String name, UUID roomId) {
-        User user = userService.findByUsername(name);
+        User user = userReader.findByUsername(name);
         Room room = findRoom(roomId);
 
         if(userRoomService.findByUserAndRoom(user, room).isEmpty()){
